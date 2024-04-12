@@ -16,7 +16,7 @@ import numpy as np
 import os
 from Function_files.fitting_functions import exp_decay
 
-mp.style.use('Function_files\signature.mplstyle')
+mp.style.use(r"C:\Users\sk88\Documents\Python\Function_files\signature.mplstyle")
 
 # colour map for plotting scope data
 scope_colours = ['gold', 'limegreen', 'orange', 'royalblue']
@@ -75,6 +75,8 @@ def plot_scan(data_dict:dict, y_key:str, xerr_key:str= None, yerr_key:str= None,
 def plot_scope(time, channel_data, titles=[], multi: bool=False):
     '''
     Plot scope data.
+
+    TO DO: fix bug for plotting only 1 array
 
     <time>:
         time channel data goes here
@@ -293,22 +295,27 @@ def plot_T1_trigger(time_data, channel_data:list, i:dict=None):
 
     return fig, ax
 
-def plot_T1_fit(time, data, fit):
+def plot_T1_fit(time, data, fit_params, scale=1):
     '''
     Plot T1 fitted data on top of experimental data
     
     '''
+    if type(fit_params) == tuple:
+        fit = fit_params[0]
+    else:
+        fit = fit_params
+
     fig, ax = mp.subplots(nrows=1, ncols=2)
     
     ax[0].set_title('Reference Fit')
-    ax[0].plot(time, data, color='blue', alpha=0.5, label='Exp. Data')
-    ax[0].plot(time, exp_decay((time), *fit), color='orange', linestyle='--', alpha=1, label='Fit')
+    ax[0].plot(time*scale, data, color='blue', alpha=0.5, label='Exp. Data')
+    ax[0].plot(time*scale, exp_decay(time, *fit), color='orange', linestyle='--', alpha=1, label='Fit')
     ax[0].ticklabel_format(axis='both', style='sci', scilimits=(0,0), useMathText = True)
     ax[0].legend()
 
     ax[1].set_title('Log Scale Fit')
-    ax[1].plot(time,data, color='blue', alpha=0.5, label='Exp. Data')
-    ax[1].plot(time, exp_decay((time), *fit), color='orange', linestyle='--', alpha=1, label='Fit')
+    ax[1].plot(time*scale, data, color='blue', alpha=0.5, label='Exp. Data')
+    ax[1].plot(time*scale, exp_decay(time, *fit), color='orange', linestyle='--', alpha=1, label='Fit')
     ax[1].set_yscale('log')
     ax[1].legend()
 
