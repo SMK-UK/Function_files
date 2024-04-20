@@ -89,7 +89,7 @@ def corrected_pulse_area(dataset_1, indexes:list[int], dataset_2=None):
     area_2 = simpson(y=dataset_1[:,indexes[1]], x=dataset_1[:,indexes[2]])
     
     if dataset_2 is not None:
-        control = simpson(y=dataset_2[:,indexes[0]], x=dataset_2[:,indexes[2]])
+        control = np.abs(simpson(y=dataset_2[:,indexes[0]], x=dataset_2[:,indexes[2]]))
         
     return normalise(dataset_1=area_1, reference=area_2, dataset_2=control)
 
