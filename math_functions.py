@@ -48,15 +48,14 @@ def bin_data(data, N: int = 10, edge: bool = False):
     
     Parameters
     ----------
-
     data : list of data to average
     bins : number of bins to group data into
     edge : choose to include right or left edge of bin.
 
     Returns
     -------
-
     mean : value of data
+
     """
     minimum = min(data)
     maximum = max(data)
@@ -67,30 +66,55 @@ def bin_data(data, N: int = 10, edge: bool = False):
 
 def corrected_pulse_area(dataset_1, indexes:list[int], dataset_2=None):
     '''
-    Calculate the corrected and normalised pulse area
-    
-    <dataset_1>:
-        excel file for the transmitted and reference pulses
-    <dataset_2>:
-        excel file for the correction pulse data
-    <indexes>:
-        list of indexes for the corresponding column data
-        
-    [0] trans:
-        index for the transmitted data
-    [1] ref:
-        index for the reference data
-    [2] time:
-        index for the time data
+    Calculate the corrected and normalised pulse area. If start and stop indexes 
+    are given then the data will be zero based on binning of the points that lie 
+    within start and stop.
+
+    Parameters
+    ----------    
+    dataset_1 : array
+        Excel file for the transmitted and reference pulses
+    dataset_2 : array
+        Excel file for the correction pulse data
+    indexes : list[int]
+        List of indexes for the corresponding column data
+
+        [0] trans : int
+            Index for the transmitted data
+        [1] ref : int
+            Index for the reference data
+        [2] time : int
+            Index for the time data
+        [3] start : int
+            Start index for binning
+        [4] stop : int
+            Stop index for binning
+
+    Returns
+    -------
+    Normalise : array
+        Normalised and corrected dataset 
 
     '''
+
+    assert len(indexes) in [3, 5], "Indexes list length must be either 3 or 5"
     control = 0
-    area_1 = simpson(y=dataset_1[:,indexes[0]], x=dataset_1[:,indexes[2]])
-    area_2 = simpson(y=dataset_1[:,indexes[1]], x=dataset_1[:,indexes[2]])
+    if len(indexes) == 3 :
+        data_1 = dataset_1[:,indexes[0]]
+        data_2 = dataset_1[:,indexes[1]]
+        if dataset_2 is not None:
+            data_3 = dataset_2[:,indexes[0]]
+            control = np.abs(simpson(y=data_3, x=dataset_2[:,indexes[2]]))
+    else:
+        data_1 = dataset_1[:,indexes[0]] - bin_data(dataset_1[indexes[3]:indexes[4], indexes[0]], N=100)
+        data_2 = dataset_1[:,indexes[1]] - bin_data(dataset_1[indexes[3]:indexes[4], indexes[1]], N=100)
+        if dataset_2 is not None:
+            data_3 = dataset_2[:,indexes[0]] - bin_data(dataset_2[indexes[3]:indexes[4], indexes[0]], N=1000)
+            control = np.abs(simpson(y=data_3, x=dataset_2[:,indexes[2]]))
+
+    area_1 = simpson(y=data_1, x=dataset_1[:,indexes[2]])
+    area_2 = simpson(y=data_2, x=dataset_1[:,indexes[2]])
     
-    if dataset_2 is not None:
-        control = np.abs(simpson(y=dataset_2[:,indexes[0]], x=dataset_2[:,indexes[2]]))
-        
     return normalise(dataset_1=area_1, reference=area_2, dataset_2=control)
 
 def find_longest(data_list):
@@ -175,7 +199,7 @@ def OD_calc(ref_data, trans_data, c_factor: float=1):
 
 def zoom(data, bounds:tuple=()):
     """
-    zoom in on a particular area of interest in a dataset
+    Zoom in on a particular area of interest in a dataset
 
     Parameters
     ----------

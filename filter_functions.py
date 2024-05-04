@@ -6,27 +6,28 @@ from scipy.signal import fftconvolve
 from Function_files.fitting_functions import gaussian
 import numpy as np
 
-def band_pass(N_low, low, N_high, high):
+def band_pass(N, low, high):
     """
-    Generates band-pass windowed sinc for filtering data.
+    Generates a band-pass window sinc for filtering data 
+    with frequency cut-offs at low and high
 
     Parameters
     ----------
-
-    N_low : array_like
+    N : int
         Length of filter
-    fc : single value
-        frequency cut-off
+    low :
+        Low frequency cut-off
+    high : 
+        High frequency cut-off
     
     Returns
     -------
-
-    out : 1-D array
-        y values as a function of x
+    bpf : array
+        Normalised band-pass function of length N
 
     """
 
-    bpf = fftconvolve(low_pass(N_low, low), high_pass(N_high, high))
+    bpf = fftconvolve(low_pass(N, low), high_pass(N, high))
     bpf = bpf / np.sum(bpf)
 
     return bpf
@@ -37,15 +38,13 @@ def blackman(N: int):
 
     Parameters
     ----------
-
-    N : array_like
+    N : int
         Length of window
     
     Returns
     -------
-
-    out : 1-D array
-        y values as a function of x
+    out : array
+        Normalised Blackman window of length N
 
     """
     if not N % 2:
@@ -62,19 +61,18 @@ def high_pass(N, fc):
 
     Parameters
     ----------
-
-    N : array_like
+    N : int
         Length of filter
-    fc : single value
-        frequency cut-off
+    fc : int
+        Frequency cut-off
     
     Returns
     -------
-
-    out : 1-D array
-        y values as a function of x
+    out : array
+        Normalised high-pass windowed sinc filter of length N
 
     """
+    # N must be even
     if not N % 2:
         N += 1
 
@@ -87,22 +85,20 @@ def high_pass(N, fc):
 
 def low_pass(N, fc):
     """
-    Generates low-pass windowed since for filtering data above the cut-off
+    Generates low-pass windowed sinc for filtering data above the cut-off
     frequency.
 
     Parameters
     ----------
-
-    N : array_like
+    N : int
         Length of filter
-    fc : single value
-        frequency cut-off
+    fc : int
+        Frequency cut-off
     
     Returns
     -------
-
-    out : 1-D array
-        y values as a function of x
+    out : array
+        Normalised low-pass windowed sinc filter of length N
 
     """
     if not N % 2:
@@ -112,54 +108,47 @@ def low_pass(N, fc):
 
     return low_pass / np.sum(low_pass)
 
-def moving_av(N, type:str='square'):
+def create_window(N, mode:str='square'):
     """
-    Generates moving average window of type
+    Generates window for smoothing depending on user input
 
     Parameters
     ----------
-
-    N : array_like
+    N : int
         Length of window
-    type : string
-        Type of window to use:
-        Square
-        Gaussian
-        Blackman
+    mode : string
+        Function to use for window > square, gaussian, blackman
     
     Returns
     -------
-
-    out : 1-D array
-        y values as a function of x
+    out : array
+        Normalised smoothing window of length N
 
     """
-    if type == 'square':
+    if mode == 'square':
         window = np.ones(N)
-    if type == 'gaussian':
+    if mode == 'gaussian':
         window = gaussian(np.arange(N), 1, 0, N/2, (N-1)/5)
-    if type == 'blackman':
+    if mode == 'blackman':
         window = blackman(N)
 
     return window / np.sum(window)
 
 def sinc_filter(N, fc):
     """
-    Generates sinc filter with length N and frequency fc
+    Generates a sinc filter with length N and cut-off frequency fc
 
     Parameters
     ----------
-
-    N : array_like
+    N : array
         Length of filter
-    fc : single value
-        frequency
+    fc : int
+        Frequency
 
     Returns
     -------
-
-    out : 1-D array
-        y values as a function of x
+    out : array
+        Normalised sinc filter of length N
 
     """
     if not N % 2:
@@ -169,29 +158,30 @@ def sinc_filter(N, fc):
 
     return np.sinc(2 * fc * (n - (N-1)/2))
 
-def smooth_data(data, N: int=100, type:str='square'):
+def smooth_data(data, N: int=100, mode:str='square'):
     """
-    Generates sinc filter with length N and frequency fc
-
+    Filter a given array of data using chosen type of smoothing function.
+    Uses fftconvolve for speed and mirrors data to remove edge effects.
+    
     Parameters
     ----------
-
-    data : input array of data to be smoothed    
-    N : array_like
+    data : array
+        Input array of data to be smoothed    
+    N : int
         Length of filter
-    type : string - name of smoothing function
-        Square
-        Gaussian
-        Blackman
+    mode : string
+        Smoothing function to use > square, gaussian, blackman
     
     Returns
     -------
-
-    out : 1-D array of data smoothed
+    out : array
+        Filtered data
 
     """
     # create a boxcar window and then create a list of smoothed data
-    avg_window = moving_av(N, type)
-    length_window = avg_window.shape[0] // 2
-    
-    return fftconvolve(avg_window, data)[length_window-1:-length_window]
+    avg_window = create_window(N, mode)
+    # pad data to avoid edge effects
+    N_pad = len(data)//2
+    padded = np.concatenate((data[N_pad:], data, data[:N_pad]))
+
+    return fftconvolve(avg_window, padded)[N_pad:-N_pad]
