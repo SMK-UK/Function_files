@@ -48,14 +48,12 @@ def bin_data(data, N: int = 10, edge: bool = False):
     
     Parameters
     ----------
-
     data : list of data to average
     bins : number of bins to group data into
     edge : choose to include right or left edge of bin.
 
     Returns
     -------
-
     mean : value of data
 
     """
@@ -68,45 +66,26 @@ def bin_data(data, N: int = 10, edge: bool = False):
 
 def corrected_pulse_area(dataset_1, indexes:list[int], dataset_2=None):
     '''
-    Calculate the corrected and normalised pulse area.
-
-    First zero the data sets using a simple binning function on a
-    section of the data set with no pulse. Then calculate the area 
-    of the zeroed datasets before normalising.
-
-    Parameters
-    ----------
+    Calculate the corrected and normalised pulse area
     
-    dataset_1 :
+    <dataset_1>:
         excel file for the transmitted and reference pulses
-    dataset_2 :
+    <dataset_2>:
         excel file for the correction pulse data
-    indexes :
+    <indexes>:
         list of indexes for the corresponding column data
         
-    [0] trans :
+    [0] trans:
         index for the transmitted data
-    [1] ref :
+    [1] ref:
         index for the reference data
-    [2] time :
+    [2] time:
         index for the time data
-    [3] start :
-        start index of data set to correct
-    [4] start :
-        stop index of data set to correct
-
-    Returns
-    ----------
-
-    normalise
 
     '''
     control = 0
-    zeroed_1 = zero_data(dataset_1[:, indexes[0]], [indexes[3], indexes[4]])
-    zeroed_2 = zero_data(dataset_1[:, indexes[1]], [indexes[3], indexes[4]])
-    
-    area_1 = simpson(y=zeroed_1, x=dataset_1[:,indexes[2]])
-    area_2 = simpson(y=zeroed_2, x=dataset_1[:,indexes[2]])
+    area_1 = simpson(y=dataset_1[:,indexes[0]], x=dataset_1[:,indexes[2]])
+    area_2 = simpson(y=dataset_1[:,indexes[1]], x=dataset_1[:,indexes[2]])
     
     if dataset_2 is not None:
         control = np.abs(simpson(y=dataset_2[:,indexes[0]], x=dataset_2[:,indexes[2]]))
