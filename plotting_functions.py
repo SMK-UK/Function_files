@@ -5,7 +5,7 @@ Quantum Memories Group, Heriot-Watt University, Edinburgh
 
 Functions designed to plot data
 
-V.0.1
+V.1.0
 '''
 
 from numpy import argmin, linspace, min
@@ -16,7 +16,7 @@ import numpy as np
 import os
 from Function_files.fitting_functions import exp_decay
 
-mp.style.use(r"C:\Users\sk88\Documents\Python\Function_files\signature.mplstyle")
+mp.style.use(r"C:\Users\keena\Documents\University\python_scripts\Function_files\signature.mplstyle")
 
 # colour map for plotting scope data
 scope_colours = ['gold', 'limegreen', 'orange', 'royalblue']
@@ -119,9 +119,16 @@ def plot_scope(time, channel_data, titles=[], multi: bool=False):
     
     return fig, ax
 
-def plot_spectra(x_data, y_data, data_indexes = [], keys = list[str], shifter: float=0,
-            axis_lbls = None, sec_axis = True, save = False, 
-            data_labels = [], lims: tuple = (), woi: list = [], res = 80):
+def plot_spectra(x_data, y_data, data_indexes = [], 
+                 keys = list[str], 
+                 shifter: float=0, 
+                 axis_lbls = None, 
+                 sec_axis = True, 
+                 save = False, 
+                 data_labels = [], 
+                 lims: tuple = (), 
+                 woi: list = [], 
+                 res = 80):
     """
     TO DO:
 
