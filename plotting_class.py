@@ -13,8 +13,6 @@ TODO
 
 '''
 
-
-
 from numpy import argmin, linspace, min
 from matplotlib.colors import ListedColormap, LinearSegmentedColormap, to_rgba
 import matplotlib.patches as mpatches
