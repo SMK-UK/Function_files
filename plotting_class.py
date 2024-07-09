@@ -24,12 +24,12 @@ from Function_files.fitting_functions import exp_decay
 from Function_files.addresses import Init_Directories
 dirs = Init_Directories()
 
-mp.style.use(r"C:\Users\keena\Documents\University\python_scripts\Function_files\signature.mplstyle")
+mp.style.use(r"C:\Users\sk88\Documents\Python\Function_files\signature.mplstyle")
 
 # colour map for plotting scope data
 scope_colours = ['gold', 'limegreen', 'orange', 'royalblue']
 scope_rgba = [to_rgba(colour) for colour in scope_colours]
-og_cmap = mp.cm.get_cmap('tab10')
+og_cmap = mp.get_cmap('tab10')
 
 # Get the colors from the existing colormap
 og_colors = og_cmap(np.linspace(0, 1, og_cmap.N))
@@ -112,6 +112,53 @@ class Spectra_Plotter:
                 self.path = self.dir + self.folder + self.fname     # save directory
                 fig.savefig(fname=self.path, dpi=self.res, format=self.format, bbox_inches='tight')
                 
+        return fig, ax
+    
+    def plot_scope(time, channel_data, titles=[], multi: bool=False):
+        '''
+        Plot scope data.
+
+        TO DO: fix bug for plotting only 1 array
+
+        <time>:
+            time channel data goes here
+        <channel_data>:
+            channel data goes here as list
+        <titles>:
+            list of titles corresponding to channel_data
+            goes here
+        <multi>:
+            Choose to plot individual or on top of one another
+
+        '''
+        # set labels if they exist or not
+        labels = []
+        if titles:
+            for title in titles:
+                labels.append(title)
+        if not titles or len(titles) < len(channel_data):
+            for index in range(len(titles), len(channel_data), 1):
+                labels.append(f'Channel {index+1}')
+        # chosose plot type
+        if multi:
+
+            num = len(channel_data)
+            fig, ax = mp.subplots(nrows=num, ncols=1, sharex='all')
+            # shared labels
+            fig.tight_layout(w_pad=2, rect=[0.05, 0.05, 1, 1])
+            fig.supxlabel('Time ($\mu$s)')
+            fig.supylabel('Voltage (V)')
+
+            for index, axis in enumerate(ax):
+                axis.set_title(labels[index])
+                axis.plot(time, channel_data[index], color=custom_cmap(index))
+        else:
+            fig, ax = mp.subplots()
+            for index, data in enumerate(channel_data):
+                ax.plot(time, data, color=custom_cmap(index), label=labels[index])
+                ax.legend()
+            ax.set(xlabel='Time ($\mu$s)', ylabel='Voltage (V)')
+        
         return fig, ax
     
     def plot_spectra(self,

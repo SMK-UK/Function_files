@@ -178,10 +178,14 @@ def smooth_data(data, N: int=100, mode:str='square'):
         Filtered data
 
     """
+    # add 1 to N if even
+    if N % 2 == 0:
+        N += 1
     # create a boxcar window and then create a list of smoothed data
     avg_window = create_window(N, mode)
     # pad data to avoid edge effects
     N_pad = len(data)//2
+    # get length of window
     padded = np.concatenate((data[N_pad:], data, data[:N_pad]))
 
-    return fftconvolve(avg_window, padded)[N_pad:-N_pad]
+    return fftconvolve(avg_window, padded)[N_pad+N//2:-N_pad-N//2]

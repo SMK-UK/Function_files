@@ -16,12 +16,12 @@ import numpy as np
 import os
 from Function_files.fitting_functions import exp_decay
 
-mp.style.use(r"C:\Users\keena\Documents\University\python_scripts\Function_files\signature.mplstyle")
+mp.style.use(r"C:\Users\sk88\Documents\Python\Function_files\signature.mplstyle")
 
 # colour map for plotting scope data
 scope_colours = ['gold', 'limegreen', 'orange', 'royalblue']
 scope_rgba = [to_rgba(colour) for colour in scope_colours]
-og_cmap = mp.cm.get_cmap('tab10')
+og_cmap = mp.get_cmap('tab10')
 
 # Get the colors from the existing colormap
 og_colors = og_cmap(np.linspace(0, 1, og_cmap.N))

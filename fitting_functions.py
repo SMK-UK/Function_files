@@ -502,7 +502,7 @@ def N_gaussian(x, *params):
 
     return y
 
-def peak_find(y, x=None, prom_tol=None, top_tol=None, lims=None):
+def peak_find(y, x=None, top_tol=None, dist=None, prom_tol=None, lims=None):
     """
     Find peaks in data
 
@@ -518,12 +518,16 @@ def peak_find(y, x=None, prom_tol=None, top_tol=None, lims=None):
 
     peaks_data : indexes of peaks for each data set
 
+    TODO
+
+    Fix params not working as expected - does not affect peak finding
+
     """
     lower = 0
     upper = -1
 
     if lims:
-        lower, upper = zoom(x, bounds=lims)  
+        lower, upper = zoom(x, bounds=lims)
 
     data_max = np.max(y[lower:upper])
 
@@ -532,7 +536,7 @@ def peak_find(y, x=None, prom_tol=None, top_tol=None, lims=None):
     if top_tol:
         top_tol *= data_max
 
-    peaks, _ = find_peaks(y[lower:upper], height=top_tol, prominence=prom_tol)
+    peaks, _ = find_peaks(y[lower:upper], height=top_tol, distance=dist, prominence=prom_tol)
     
     return peaks
 
