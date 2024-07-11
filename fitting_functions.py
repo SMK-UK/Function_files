@@ -502,6 +502,40 @@ def N_gaussian(x, *params):
 
     return y
 
+def N_lorentzian(x, *params):
+    """
+    Generates sum of N Lorentzians with given parameters
+    
+    Parameters
+    ----------
+
+    x : 1D array 
+        Positional arguments for Lorentzian
+        
+    params : list of values containing (in order) 
+
+    amp : Single value
+        Maximum value of Lorentzian
+    y_0 : Single value
+        Y Offset
+    x_0 : Single value
+        Centre of Lorentzian peak
+    gamma : Single value
+        Standard deviation of Lorentzian
+
+    Returns
+    -------
+
+    1D array of height values for the positional arguments given in x
+
+    """
+    assert len(params) % 4 == 0, 'params must be a multiple of 4'
+    y = np.zeros_like(x)
+    for i in range(0, len(params), 4):
+        y = y + lorentzian(x, params[i], params[i+1], params[i+2], params[i+3])
+
+    return y
+
 def peak_find(y, x=None, top_tol=None, dist=None, prom_tol=None, lims=None):
     """
     Find peaks in data
