@@ -620,7 +620,8 @@ def write_json(
         This function does not return any value.
     """
     try:
-        file_name = check_file_exists(file_name, '.json')
+        #file_name = check_file_exists(file_name, '.json')
+        file_name = file_name + '.json'
         with open(file_name, 'w') as f:
             json.dump(data, f, indent=indent)
     except Exception as e:
