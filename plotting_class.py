@@ -24,7 +24,7 @@ from Function_files.fitting_functions import exp_decay
 from Function_files.addresses import Init_Directories
 dirs = Init_Directories()
 
-mp.style.use(r"C:\Users\keena\Documents\University\python_scripts\Function_files\signature.mplstyle")
+mp.style.use(r"C:\Users\sk88\Documents\Python\Function_files\signature.mplstyle")
 
 # colour map for plotting scope data
 scope_colours = ['gold', 'limegreen', 'orange', 'royalblue']
