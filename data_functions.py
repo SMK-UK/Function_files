@@ -12,123 +12,231 @@ import os, re
 import pandas as pd
 import json
 
-def check_str(subset_string: str,
-              main_string: str) -> bool:
+from typing import Any, Dict, List, Tuple, Union
+
+def check_digits(
+    input_string: str
+    ) -> bool:
     """
-    Checks a string against another string and tests if the first is a subset of the second
+    Checks if a string contains digits and validates if all characters 
+    are allowed.
 
     Parameters
     ----------
-    subset_string : string
-        Validation string to check against
-    main_string : string
-        String to check 
+    input_string : str
+        The string to check.
 
     Returns
     -------
-    Boolean
-        True or False depending on the condition of check_str
+    bool
+        True if the string contains digits and all characters are 
+        allowed; False otherwise.
+    """
+    allowed = "0123456789\n\t\r eE-+,.;"
+
+    # Check if the string contains any digit
+    contains_digit = any(
+        char.isdigit() for char in input_string
+        )
+
+    # Check if all characters in the string are among allowed 
+    # characters
+    characters_allowed = all(
+        char in allowed for char in input_string
+        )
+
+    return contains_digit and characters_allowed
+
+def check_dir(
+        directory:str,
+        verbose: bool=True
+        ):
+    """
+    Check if a directory exists and if not create it at the desired
+    location.
+    
+    Parameters
+    ----------
+    keys : list
+        Data values to create a dictionary from
+
+    Returns
+    -------
+    dictionary :
+        Key = value pairs for the data in keys
+    """
+    if os.path.exists(directory):
+        if verbose:
+            print(f'{directory} already exists \n')
+    else:
+        try:
+            os.makedirs(directory)
+            if verbose:
+                print(f'{directory} does not exist. \n \
+                        Creating directory... \n')
+        except FileExistsError:
+            if verbose:
+                print(f'{directory} already exists \n')
+            pass 
+
+def check_file_exists(
+        file_path:str, 
+        format:str,
+        verbose:bool=True
+        ):
+    """
+    Check if a file path exists already and create a copy to avoid 
+    not saving data or error
+
+    Parameters
+    ----------
+
+    format: str
+        file format that you wish to save the file with
     
     """
-    # string to check against - should be a subset of char_allow
+    check = True
+    check_dir(file_path)
+    while check:
+        if os.path.isfile(f'{file_path}.{format}'):
+            save_file = f'{save_file}-(copy)'
+        else:
+            save_file = f'{save_file}.{format}'
+            if verbose:
+                print(f"Saving file as {save_file}")
+            check = False
+    
+    return save_file
+
+def check_str(
+    subset_string: str,
+    main_string: str
+    ) -> bool:
+    """
+    Checks if all characters in `subset_string` are present in 
+    `main_string`.
+
+    Parameters
+    ----------
+    subset_string : str
+        The string whose characters are to be checked.
+    main_string : str
+        The string against which the subset_string is validated.
+
+    Returns
+    -------
+    bool
+        True if all characters in subset_string are found in 
+        main_string, False otherwise.
+    """
+    # Create sets for subset and main strings
     char_allow = set(subset_string)
-    # should contain the string you want to check
     validation = set(main_string)
    
+    # Check if all characters in char_allow are present in validation
     return char_allow.issubset(validation)
 
-def check_digits(input_string: str) -> bool:
+def dir_interrogate(
+    path: str,
+    extensions: List[str] = [],
+    exceptions: List[str] = [],
+    folders: List[str] = []
+    ) -> Tuple[List[str], List[str]]:
     """
-    Checks if a string contains only digits and flags if True
-    
-    Parameters
-    ----------
-    input_string : string
-        String to check the contents of
+    Interrogate a directory to extract folders and files based on 
+    optional filters.
 
-    Returns
-    -------
-    logical : Boolean
-        True or False depending on the condition of check_str
-
-    """
-    # check input string for digits and flag True
-    if any(char.isdigit() for char in input_string) == True:
-
-        logical = check_str((input_string), "0123456789\n\t\r eE-+,.;")
-    else:
-        logical = False
-
-    return logical
-
-def dir_interrogate(path: str, 
-                   extensions: list[str] = [], 
-                   exceptions: list[str] = [], 
-                   folders: list[str] = []) -> tuple[list[str], list[str]]:
-    """
-    Interogate directory and extract all folders and files. Optional: 'extensions', 
-    'exceptions' and 'folders' enables selective read of files and folders.
-
-    Only capable of extracting files that are nested once. Will not work for 
-    subfolders or extract files from the main directory.
+    This function extracts folders and files that are nested once 
+    in the given directory.
+    It does not handle files in subfolders or the main directory 
+    itself.
 
     Parameters
     ----------
-    path : string - main folder / directory to interrogate
-    extensions : tuple - file extensions to check for in directory
-    exceptions : tuple - file extensions / strings to exclude
-    folders : tuple - select folders to extract from
+    path : str
+        The path to the main directory to interrogate.
+    extensions : List[str], optional
+        A list of file extensions to include. If empty, no filtering 
+        by extension is applied.
+    exceptions : List[str], optional
+        A list of file extensions or substrings to exclude from the 
+        results. If empty, no exclusions are applied.
+    folders : List[str], optional
+        A list of folder names to include. If empty, all folders are 
+        considered.
 
     Returns
     -------
-    folder_list : list of folder names
-    file_list : list of file names
+    Tuple[List[str], List[str]]
+        A tuple where:
+        - The first element is a list of folder names.
+        - The second element is a list of file names.
 
-    """       
+    Notes
+    -----
+    - Only files nested one level below the specified directories are 
+    included.
+    - The function uses natural sorting for directory and file names.
+    """
     folder_list = []
     file_list = []
     for root, dirs, files in natsorted(os.walk(path)):
 
+        # Process directories
         if dirs:
             dirs = natsorted(dirs)
             if not folders:
                 folder_list = dirs
             else:
-                folder_list = [folder for folder in dirs 
-                               if folder in folders]
+                folder_list = [
+                    folder for folder in dirs if folder in folders
+                    ]
             if exceptions:
-                folder_list = [folder for folder in folder_list
-                               if not any([x in folder for x in exceptions])]
+                folder_list = [
+                    folder for folder in folder_list
+                               if not any(
+                                exc in folder for exc in exceptions
+                                )]
 
+        # Process files
         if not dirs:
             temp_files = []
             if not folders:
                 temp_files = files
-            elif any([x in os.path.split(root) for x in folders]):
+            elif any(
+                folder in os.path.split(root)[-1] for folder in folders
+                ):
                 temp_files = files
             if exceptions:
                 temp_files = [file for file in temp_files
-                              if not any([x in file for x in exceptions])]
-            else:
-                temp_files = [file for file in temp_files]
+                              if not any(
+                                exc in file for exc in exceptions
+                                )]
             if extensions:
-                    temp_files = [file for file in temp_files
-                              if file.endswith(tuple(extensions))]
+                temp_files = [
+                    file for file in temp_files
+                              if file.endswith(
+                                tuple(extensions)
+                                )]
             if temp_files:
                 file_list.append(natsorted(temp_files))
 
+    # Flatten the list if there is only one sublist
     if len(file_list) == 1:
-        file_list = [file_name for sublist in file_list
-                     for file_name in sublist]
-    
+        file_list = [
+            file_name for sublist in file_list for file_name in sublist
+            ]
+
     return folder_list, file_list
 
-def find_numbers(string:str, 
-                 pattern:str='-?\ *\d+\.?\d*(?:[Ee]\ *-?\ *\d+)?') -> list[str]:
+def find_numbers(
+    string:str,
+    pattern:str='-?\ *\d+\.?\d*(?:[Ee]\ *-?\ *\d+)?'
+    ) -> list[str]:
     """
-    Checks string for whole numbers (does not split numbers i.e. 180 is 
-    returned as '180' and not ['1','8','0']) and returns a list of all 
-    numbers found in the string
+    Checks string for whole numbers (does not split numbers i.e. 180 
+    is returned as '180' and not ['1','8','0']) and returns a list 
+    of all numbers found in the string
     
     Parameters
     ----------
@@ -152,9 +260,41 @@ def find_numbers(string:str,
 
     return numbers
 
-def make_index_dict(keys: list):
+def make_dir(
+        directory:str,
+        verbose: bool= True
+        ):
     """
-    Make a simple dictionary containing values with increasing index numbers (starting at 0)
+    Check if a directory exists and if not create it at the desired
+    location.
+    
+    Parameters
+    ----------
+    keys : list
+        Data values to create a dictionary from
+
+    Returns
+    -------
+    dictionary :
+        Key = value pairs for the data in keys
+    """
+    if check_dir(directory):
+        print(f'{directory} already exists \n')
+    else:
+        try:
+            os.makedirs(directory)
+            print(f'{directory} does not exist. \n \
+                  Creating directory... \n')
+        except FileExistsError:
+            print(f'{directory} already exists \n')
+            pass    
+
+def make_index_dict(
+    keys: list
+    ):
+    """
+    Make a simple dictionary containing values with increasing index 
+    numbers (starting at 0).
     
     Parameters
     ----------
@@ -169,53 +309,65 @@ def make_index_dict(keys: list):
     """
     return {x: index for index, x in enumerate(keys)} 
 
-def open_csv(path: str, 
-             separators: str=",") -> list:
+import pandas as pd
+import numpy as np
+from typing import List
+
+def open_csv(path: str, separators: str = ",") -> np.ndarray:
     """
-    Open a given excel / csv file and convert each column 
-    to an np.array and place into a list
-    
+    Open a CSV file and convert its contents to a NumPy array.
+
     Parameters
     ----------
-    path : string
-        path to extract the excel data from
-    separators : string
-        Seperators to use in splitting the columns. Default is comma ','
+    path : str
+        Path to the CSV file.
+    separators : str, optional
+        Separator(s) used in splitting the columns. Default is ','.
     
     Returns
     -------
-    excel_data : list
-        Column data from pandas data frame as list of np.arrays
+    np.ndarray
+        A NumPy array containing the data from the CSV file.
+        Each row in the array corresponds to a row in the CSV file.
 
+    Raises
+    ------
+    FileNotFoundError
+        If the file specified by `path` is not found.
+    Exception
+        If any unexpected error occurs while reading the file.
     """
-    # attempt to open the file
     try:
+        # Read the CSV file into a DataFrame
         temp_df = pd.read_csv(path, sep=separators, engine='python')
+        # Convert the entire DataFrame to a NumPy array
         csv_data = temp_df.to_numpy()
         return csv_data
-    # flag error if unable to open
     except FileNotFoundError:
         print(f"Error: File '{path}' not found.")
-        return []
+        return np.array([])
     except Exception as e:
-        print(f"Error: An unexpected error occurred while \
-              reading the file '{path}': {str(e)}")
-        return []
-    
-def open_text(path: str):
+        print(f"Error: An unexpected error occurred while reading the file '{path}': {str(e)}")
+        return np.array([])
+   
+def open_text(
+    path: str
+    ) -> List[List[Union[str, List[str]]]]:
     """
-    Open a text file and read the first two columns to a list. Works with
-    columns of different length
+    Open a text file and read its columns into lists. Handles columns 
+    of varying lengths.
 
     Parameters
     ----------
-    path : file path
-    
+    path : str
+        Path to the text file.
+
     Returns
     -------
-    data_list : list of data read from path
-    metadata_list : list of metadata read from path
-    
+    List[List[Union[str, List[str]]]]
+        A list where each sublist represents a column of data. If 
+        there is only one column, the outer list will be flattened 
+        to a single list of strings.
     """
     data_list = []
     try:
@@ -242,87 +394,112 @@ def open_text(path: str):
 
     return data_list
 
-def read_file(path: str) -> tuple:
+def read_file(
+    path: str
+    ) -> Tuple[List[List[Any]], List[List[float]]]:
     """
-    Open a given file and read the first two columns to a list. Works with
-    different lengths of columns 
+    Open a given file and read the first two columns to lists. Handles 
+    varying column lengths.
 
     Parameters
     ----------
     path : str
-        Path of file to open
-    
+        Path of the file to open.
+
     Returns
     -------
-    metadata_list : list
-        List of infromation / metadata read from the file
-    data_list : list
-        List of number data read from file
-    
+    Tuple[List[List[Any]], List[List[float]]]
+        A tuple containing:
+        - A list of metadata lists (each inner list contains metadata 
+        entries).
+        - A list of data lists (each inner list contains numerical 
+        data).
     """
     data_list = []
     metadata_list = []
+
     try:
         with open(path, 'r', newline='') as raw_file:
             for row in raw_file:
+                columns = [
+                    i.strip() for i in re.split(r'[,\t;]', row) 
+                    if i.strip()
+                    ]
                 if check_digits(row):
-                    # generate list to populate with column data
-                    data_temp = [i for i in re.split(r"[\t|,|;]", row) if i.strip()]
-                    # create the empty list with approriate number of nested lists
+                    # Initialize data_list if empty
                     if not data_list:
-                        data_list = [[] for _ in range(len(data_temp))]
-                    for index, data in enumerate(data_temp):
-                        if len(data_list) < index + 1:
+                        data_list = [[] for _ in range(len(columns))]
+                    for index, value in enumerate(columns):
+                        # Ensure data_list has enough nested lists
+                        while len(data_list) <= index:
                             data_list.append([])
-                        data_list[index].append(float(data))
+                        data_list[index].append(float(value))
                 else:
-                    metadata_temp = [i for i in re.split(r"[\t|,|;]", row) if i.strip()]
+                    # Initialize metadata_list if empty
                     if not metadata_list:
-                        metadata_list = [[] for _ in range(len(metadata_temp))]
-                    for index, metadata in enumerate(metadata_temp):
-                        if len(metadata_list) < index + 1:
+                        metadata_list = [
+                            [] for _ in range(len(columns))
+                            ]
+                    for index, value in enumerate(columns):
+                        # Ensure metadata_list has enough nested lists
+                        while len(metadata_list) <= index:
                             metadata_list.append([])
-                        metadata_list[index].append(metadata)
-    # handle error exceptions
+                        metadata_list[index].append(value)
+
     except FileNotFoundError:
         print(f"Error: File '{path}' not found.")
         return [], []
     except Exception as e:
-        print(f"Error: An unexpected error occurred \
-              while reading the file '{path}': {str(e)}")
+        print(f"Error: An unexpected error occurred while reading \
+            the file '{path}': {e}")
         return [], []
 
     return metadata_list, data_list
 
-def read_json(file_name):
-    '''
-    Read from a Json file
-
-    file_name : str
-        Name of file to read
-    
-    '''
-    with open(file_name, 'r') as f:
-        return json.load(f)
-
-def search_paths(folders: list[str], files: list[str], include: list[str] = [], exclude: list[str] = []) -> list[str]:
+def read_json(
+    file_name: str
+    ) -> dict:
     """
-    Search a list of paths for include and exclude, joining
-    files to folders if the conditions are met
-        
+    Read from a JSON file.
+
     Parameters
     ----------
-    folders : list
-        List of folder names to 
-    files : list
-        list of file names
-    keys : list
-        keywords to search folders and files for
+    file_name : str
+        Name of the file to read.
     
     Returns
     -------
-    paths : list of desired paths
+    dict
+        The contents of the JSON file as a dictionary.
+    """
+    with open(file_name, 'r') as f:
+        return json.load(f)
 
+def search_paths(
+    folders: List[str],
+    files: List[List[str]],
+    include: List[str] = [],
+    exclude: List[str] = []
+    ) -> List[str]:
+    """
+    Search a list of paths for include and exclude, joining
+    files to folders if the conditions are met.
+    
+    Parameters
+    ----------
+    folders : List[str]
+        List of folder names.
+    files : List[List[str]]
+        List of file names, each sublist corresponding to the respective folder.
+    include : List[str], optional
+        Keywords to include in the search (default is []).
+    exclude : List[str], optional
+        Keywords to exclude from the search (default is []).
+    
+    Returns
+    -------
+    List[str]
+        List of desired paths.
     """
     paths = []
     for index, folder in enumerate(folders):
@@ -345,84 +522,80 @@ def search_paths(folders: list[str], files: list[str], include: list[str] = [], 
 
     return paths
 
-def seperate_lists(list_to_split):
-
-    return [[x for x, y in sublist] for sublist in list_to_split], [[y for x, y in sublist] for sublist in list_to_split]
-
-def spectrum_extract(paths: list[str],
-                     keys: list[str]=[], 
-                     tail: int=1,
-                     include: bool=True) -> tuple:
+def separate_lists(
+    list_to_split: List[List[Tuple]]
+    ) -> Tuple[List[List], List[List]]:
     """
-    search a list of paths for strings and extract the data
-    from selected files depending on the discriminator (keys)
+    Separates a list of lists of tuples into two lists of lists.
 
     Parameters
     ----------
-    paths : file paths
-    keys : list of key values to search for in path if required
-    tail : int value 1 or 0 to search head or tail of path
-    include : True or False to include the data with key or exclude
+    list_to_split : List[List[Tuple]]
+        A list of lists, where each sublist contains tuples of two elements.
     
     Returns
     -------
-    extracted_metadata : list of metadata read from path
-    extracted_data : list of data read from path
-    
+    Tuple[List[List], List[List]]
+        Two lists of lists, where the first contains all the first elements 
+        of the tuples and the second contains all the second elements of the tuples.
+    """
+    return (
+        [[x for x, y in sublist] for sublist in list_to_split],
+        [[y for x, y in sublist] for sublist in list_to_split]
+    )
+
+def spectrum_extract(
+    paths: List[str],
+    keys: List[str] = None,
+    tail: int = 1,
+    include: bool = True
+    ) -> Tuple[List[Dict[str, Any]], List[np.ndarray]]:
+    """
+    Extract data from files based on the presence of keys in their paths.
+
+    Parameters
+    ----------
+    paths : List[str]
+        List of file paths to process.
+    keys : List[str], optional
+        List of key values to search for in the paths. If None or empty, all paths are processed (default is None).
+    tail : int, optional
+        Determines which part of the path to search: 0 for head, 1 for tail (default is 1).
+    include : bool, optional
+        If True, include files containing the key. If False, include files not containing the key (default is True).
+
+    Returns
+    -------
+    Tuple[List[Dict[str, Any]], List[np.ndarray]]
+        A tuple containing two lists:
+        - A list of metadata dictionaries read from the files.
+        - A list of NumPy arrays of data read from the files.
     """
     extracted_metadata = []
     extracted_data = []
+    
+    if not paths:
+        return extracted_metadata, extracted_data
+
     if not keys:
         for path in paths:
-            extracted_metadata.append(read_file(path)[0])
-            extracted_data.append(np.array(read_file(path)[1]))
+            metadata, data = read_file(path)
+            extracted_metadata.append(metadata)
+            extracted_data.append(np.array(data))
     else:
         for key in keys:
-            extracted_data_children = []
-            extracted_metadata_children = []
+            metadata_children = []
+            data_children = []
             for path in paths:
-                if include == True:
-                    # extract data from path if it contains the key
-                    if key in os.path.split(path)[tail]:
-                        extracted_metadata_children.append(read_file(path)[0])
-                        extracted_data_children.append(np.array(read_file(path)[1])) 
-                    else:
-                        continue
-                else:
-                    # extract data from path if it does not contain the key
-                    if key in os.path.split(path)[tail]:
-                        continue
-                    else:                
-                        # extract data from path if it doesn't contain the key
-                        extracted_metadata_children.append(read_file(path)[0])
-                        extracted_data_children.append(np.array(read_file(path)[1]))
-            extracted_metadata.append(extracted_metadata_children)
-            extracted_data.append(extracted_data_children)
-
+                path_segment = os.path.split(path)[tail]
+                if (include and key in path_segment) or (not include and key not in path_segment):
+                    metadata, data = read_file(path)
+                    metadata_children.append(metadata)
+                    data_children.append(np.array(data))
+            extracted_metadata.append(metadata_children)
+            extracted_data.append(data_children)
+    
     return extracted_metadata, extracted_data
-
-def write_csv(file_name, data, delimiter=';', headers=False):
-
-    if isinstance(data, np.ndarray):
-        print(file_name)
-        np.savetxt(file_name, data, delimiter=delimiter)
-    
-def write_file(file_name:str, save_data, format:str='txt', **kwargs):
-    '''
-    Write data to a file
-    
-    Supoorted typesd are .txt, .json, .csv
-    '''
-    fname = f"{file_name}.{format}"
-    if format == 'csv':
-        i = kwargs.get('delimiter') if kwargs else ';'
-        j = kwargs.get('headers') if kwargs else False
-        write_csv(file_name=fname, data=save_data, delimiter=i, headers=j)
-    elif format == 'json':
-        i = kwargs.get('indent') if kwargs else 5
-        write_json(file_name=fname, data=save_data, indent=i)
-    else:
-        write_text(file_name=fname, data=save_data)
 
 def write_json(file_name:str, data, indent:int=5):
     '''
@@ -437,19 +610,3 @@ def write_json(file_name:str, data, indent:int=5):
     '''
     with open(file_name, 'w') as f:
         json.dump(data, f, indent=indent)
-
-def write_text(file_name:str, data):
-    '''
-    Write a text file
-    
-    '''
-    if type(data) != str:
-        print('Data type should be str!')
-    else:
-        with open(file_name, 'w') as writer:
-            writer.write(data)
-
-def numpy_extract(file_name:str, delimiter=';'):
-    data = np.loadtxt(file_name=file_name, delimiter=delimiter)
-    
-    return data[0], data[1]
