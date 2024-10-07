@@ -61,7 +61,7 @@ def check_digits(input_string: str) -> bool:
 
     return logical
 
-def dir_interogate(path: str, 
+def dir_interrogate(path: str, 
                    extensions: list[str] = [], 
                    exceptions: list[str] = [], 
                    folders: list[str] = []) -> tuple[list[str], list[str]]:
@@ -401,6 +401,29 @@ def spectrum_extract(paths: list[str],
 
     return extracted_metadata, extracted_data
 
+def write_csv(file_name, data, delimiter=';', headers=False):
+
+    if isinstance(data, np.ndarray):
+        print(file_name)
+        np.savetxt(file_name, data, delimiter=delimiter)
+    
+def write_file(file_name:str, save_data, format:str='txt', **kwargs):
+    '''
+    Write data to a file
+    
+    Supoorted typesd are .txt, .json, .csv
+    '''
+    fname = f"{file_name}.{format}"
+    if format == 'csv':
+        i = kwargs.get('delimiter') if kwargs else ';'
+        j = kwargs.get('headers') if kwargs else False
+        write_csv(file_name=fname, data=save_data, delimiter=i, headers=j)
+    elif format == 'json':
+        i = kwargs.get('indent') if kwargs else 5
+        write_json(file_name=fname, data=save_data, indent=i)
+    else:
+        write_text(file_name=fname, data=save_data)
+
 def write_json(file_name:str, data, indent:int=5):
     '''
     Write a Json file
@@ -414,3 +437,19 @@ def write_json(file_name:str, data, indent:int=5):
     '''
     with open(file_name, 'w') as f:
         json.dump(data, f, indent=indent)
+
+def write_text(file_name:str, data):
+    '''
+    Write a text file
+    
+    '''
+    if type(data) != str:
+        print('Data type should be str!')
+    else:
+        with open(file_name, 'w') as writer:
+            writer.write(data)
+
+def numpy_extract(file_name:str, delimiter=';'):
+    data = np.loadtxt(file_name=file_name, delimiter=delimiter)
+    
+    return data[0], data[1]

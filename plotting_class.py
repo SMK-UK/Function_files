@@ -24,7 +24,7 @@ from Function_files.fitting_functions import exp_decay
 from Function_files.addresses import Init_Directories
 dirs = Init_Directories()
 
-mp.style.use(r"C:\Users\keena\Documents\University\python_scripts\Function_files\signature.mplstyle")
+mp.style.use(dirs.functions + "signature.mplstyle")
 
 # colour map for plotting scope data
 scope_colours = ['gold', 'limegreen', 'orange', 'royalblue']
@@ -146,7 +146,7 @@ class Spectra_Plotter:
             fig, ax = mp.subplots(nrows=num, ncols=1, sharex='all')
             # shared labels
             fig.tight_layout(w_pad=2, rect=[0.05, 0.05, 1, 1])
-            fig.supxlabel('Time ($\mu$s)')
+            fig.supxlabel('Time ($ \mu $s)')
             fig.supylabel('Voltage (V)')
 
             for index, axis in enumerate(ax):
@@ -213,23 +213,24 @@ class Spectra_Plotter:
             else:
                 lower = 0
                 upper = -1
-            y = y_data[index][lower:upper]
-            y -= (min(y) - shift)
-            shift += shifter
-            # labels for legend
-            if data_labels:
-                label = data_labels[index]
-            else:
-                label = '_nolegend_'
-            # plot the data
-            ax.plot(x_values[lower:upper], y, 
-                    color=plot_colour[index], linestyle='-', 
-                    alpha=0.8, label=f'{label}')
-            # plot markers where applicable
-            if data_indexes:
-                ax.plot(x_values[data_indexes], y[data_indexes], 
-                        color='red', marker='x', linestyle='None', 
-                        alpha=1, label='_nolegend_')  
+            if y_data:
+                y = y_data[index][lower:upper]
+                y -= (min(y) - shift)
+                shift += shifter
+                # labels for legend
+                if data_labels:
+                    label = data_labels[index]
+                else:
+                    label = '_nolegend_'
+                # plot the data
+                ax.plot(x_values[lower:upper], y, 
+                        color=plot_colour[index], linestyle='-', 
+                        alpha=0.8, label=f'{label}')
+                # plot markers where applicable
+                if data_indexes:
+                    ax.plot(x_values[data_indexes], y[data_indexes], 
+                            color='red', marker='x', linestyle='None', 
+                            alpha=1, label='_nolegend_')  
         # add secondary axis (wavelength / wavevector)
         if sec_axis:
             ax.secondary_xaxis('top', 

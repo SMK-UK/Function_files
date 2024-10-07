@@ -14,9 +14,13 @@ import matplotlib.patches as mpatches
 import matplotlib.pyplot as mp
 import numpy as np
 import os
+
+from Function_files.addresses import Init_Directories
+dirs = Init_Directories()
+
 from Function_files.fitting_functions import exp_decay
 
-mp.style.use(r"C:\Users\keena\Documents\University\python_scripts\Function_files\signature.mplstyle")
+mp.style.use(dirs.functions + "signature.mplstyle")
 
 # colour map for plotting scope data
 scope_colours = ['gold', 'limegreen', 'orange', 'royalblue']
