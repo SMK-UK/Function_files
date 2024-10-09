@@ -112,6 +112,8 @@ def check_str(
     subset_string: str,
     main_string: str
     ) -> bool:
+    # TODO 
+    # add case insensitivity switch
     """
     Checks if all characters in `subset_string` are present in 
     `main_string`.
@@ -142,6 +144,8 @@ def dir_interrogate(
     exceptions: List[str] = [],
     folders: List[str] = []
     ) -> Tuple[List[str], List[str]]:
+    # TODO
+    # add case insensitivty to the folder search function
     """
     Interrogate a directory to extract folders and files based on 
     optional filters.
@@ -500,6 +504,7 @@ def search_paths(
     -------
     List[str]
         List of desired paths.
+        
     """
     paths = []
     for index, folder in enumerate(folders):
@@ -597,6 +602,31 @@ def spectrum_extract(
     
     return extracted_metadata, extracted_data
 
+def write_csv(file_name, data, delimiter=';', headers=False):
+    # TODO add alternate csv writer
+
+    if isinstance(data, np.ndarray):
+        np.savetxt(file_name, data, delimiter=delimiter)
+    else:
+        return False
+    
+def write_file(file_name:str, save_data, format:str='txt', **kwargs):
+    '''
+    Write data to a file
+    
+    Supoorted typesd are .txt, .json, .csv
+    '''
+    fname = f"{file_name}.{format}"
+    if format == 'csv':
+        i = kwargs.get('delimiter') if kwargs else ';'
+        j = kwargs.get('headers') if kwargs else False
+        write_csv(file_name=fname, data=save_data, delimiter=i, headers=j)
+    elif format == 'json':
+        i = kwargs.get('indent') if kwargs else 5
+        write_json(file_name=fname, data=save_data, indent=i)
+    else:
+        write_text(file_name=fname, data=save_data)
+
 def write_json(file_name:str, data, indent:int=5):
     '''
     Write a Json file
@@ -610,3 +640,14 @@ def write_json(file_name:str, data, indent:int=5):
     '''
     with open(file_name, 'w') as f:
         json.dump(data, f, indent=indent)
+
+def write_text(file_name:str, data):
+    '''
+    Write a text file
+    
+    '''
+    if type(data) != str:
+        print('Data type should be str!')
+    else:
+        with open(file_name, 'w') as writer:
+            writer.write(data)

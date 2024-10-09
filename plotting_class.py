@@ -208,29 +208,29 @@ class Spectra_Plotter:
         for index, x_values in enumerate(x_data):
             # cut data to region of interest
             if lims:
-                
                 lower, upper = self.zoom(x_values, lims)
             else:
                 lower = 0
                 upper = -1
-            if y_data:
-                y = y_data[index][lower:upper]
-                y -= (min(y) - shift)
-                shift += shifter
-                # labels for legend
-                if data_labels:
-                    label = data_labels[index]
-                else:
-                    label = '_nolegend_'
-                # plot the data
-                ax.plot(x_values[lower:upper], y, 
-                        color=plot_colour[index], linestyle='-', 
-                        alpha=0.8, label=f'{label}')
-                # plot markers where applicable
-                if data_indexes:
-                    ax.plot(x_values[data_indexes], y[data_indexes], 
-                            color='red', marker='x', linestyle='None', 
-                            alpha=1, label='_nolegend_')  
+            
+            x = x_values[lower:upper]
+            y = y_data[index][lower:upper]
+            y -= (min(y) - shift)
+            shift += shifter
+            # labels for legend
+            if data_labels:
+                label = data_labels[index]
+            else:
+                label = '_nolegend_'
+            # plot the data
+            ax.plot(x_values[lower:upper], y, 
+                    color=plot_colour[index], linestyle='-', 
+                    alpha=0.8, label=f'{label}')
+            # plot markers where applicable
+            if data_indexes:
+                ax.plot(x_values[data_indexes[index]], y[data_indexes[index]], 
+                        color='red', marker='x', linestyle='None', 
+                        alpha=1, label='_nolegend_')  
         # add secondary axis (wavelength / wavevector)
         if sec_axis:
             ax.secondary_xaxis('top', 
@@ -238,8 +238,10 @@ class Spectra_Plotter:
                                           lambda x: 1E7/x))
         # add vlines to indicate x values of interest
         if woi:
-            for vline in woi:
-                ax.vline(x=vline)
+            for woi_set in woi:
+                for vline in woi_set[0]:
+                    ax.axvline(x=vline, linestyle=woi_set[1], 
+                               color=woi_set[2], linewidth='1')
         # format the plot
         ax.set(title=f'{self.title}')
         ax.set(xlabel=f'{self.x_label}', ylabel=f'{self.y_label}')
