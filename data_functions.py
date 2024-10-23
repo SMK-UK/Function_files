@@ -8,9 +8,8 @@ Functions designed to load in and parse data form .csv or .txt
 
 from natsort import natsorted
 import numpy as np
-import os, re
+import csv, json, os, re
 import pandas as pd
-import json
 
 from typing import Any, Dict, List, Tuple, Union
 
@@ -79,34 +78,41 @@ def check_dir(
                 print(f'{directory} already exists \n')
             pass 
 
-def check_file_exists(
-        file_path:str, 
-        format:str,
-        verbose:bool=True
-        ):
-    """
-    Check if a file path exists already and create a copy to avoid 
-    not saving data or error
+def make_filename_copy(self,
+                       format: str
+                       ) -> str:
+        """
+        Check if a filename already exists and if so generate a new one
+        
+        Parameters
+        ----------
+        format: str
+            Format of the file to be saved (e.g., 'csv', 'txt')
+        
+        Returns
+        -------
+        file_name: str
+            New filename or existing filename if it does not exist
 
-    Parameters
-    ----------
-
-    format: str
-        file format that you wish to save the file with
-    
-    """
-    check = True
-    check_dir(file_path)
-    while check:
-        if os.path.isfile(f'{file_path}.{format}'):
-            save_file = f'{save_file}-(copy)'
+        """
+        i = 0
+        # check for directory and make if not
+        if self.folder:
+            self.check_dir(f'{self.path}{self.folder}')
+            base_name = f'{self.path}{self.folder}{self.fname}'
         else:
-            save_file = f'{save_file}.{format}'
-            if verbose:
-                print(f"Saving file as {save_file}")
-            check = False
-    
-    return save_file
+            self.check_dir(f'{self.path}')
+            base_name = f'{self.path}{self.fname}'
+        # check for existing file and make a copy if yes
+        file_name = f'{base_name}.{format}'
+        while os.path.isfile(file_name):
+            i += 1
+            file_name = f'{base_name} ({i}).{format}'
+
+        if self.verbose:
+            print(f"Saving file as {file_name}")
+
+        return file_name
 
 def check_str(
     subset_string: str,
@@ -602,30 +608,34 @@ def spectrum_extract(
     
     return extracted_metadata, extracted_data
 
-def write_csv(file_name, data, delimiter=';', headers=False):
+def write_csv(file_name, data, delimiter=';', headers=None, numpy=False):
     # TODO add alternate csv writer
 
-    if isinstance(data, np.ndarray):
-        np.savetxt(file_name, data, delimiter=delimiter)
+    if numpy:
+        np.savetxt(file_name, data, delimiter=delimiter, header=headers)
     else:
+        with open(file_name, 'w') as file:
+            writer = csv.writer(file, delimiter=delimiter)
+
         return False
     
 def write_file(file_name:str, save_data, format:str='txt', **kwargs):
     '''
     Write data to a file
     
-    Supoorted typesd are .txt, .json, .csv
+    Supoorted types are .txt, .json, .csv
     '''
     fname = f"{file_name}.{format}"
+
+    i = kwargs.get('delimiter') if kwargs else ';'
     if format == 'csv':
-        i = kwargs.get('delimiter') if kwargs else ';'
         j = kwargs.get('headers') if kwargs else False
         write_csv(file_name=fname, data=save_data, delimiter=i, headers=j)
     elif format == 'json':
         i = kwargs.get('indent') if kwargs else 5
         write_json(file_name=fname, data=save_data, indent=i)
     else:
-        write_text(file_name=fname, data=save_data)
+        write_text(file_name=fname, data=save_data, delimiter=i)
 
 def write_json(file_name:str, data, indent:int=5):
     '''
@@ -641,13 +651,12 @@ def write_json(file_name:str, data, indent:int=5):
     with open(file_name, 'w') as f:
         json.dump(data, f, indent=indent)
 
-def write_text(file_name:str, data):
-    '''
-    Write a text file
-    
-    '''
-    if type(data) != str:
-        print('Data type should be str!')
-    else:
-        with open(file_name, 'w') as writer:
-            writer.write(data)
+def write_text(file_name, data, delimiter=','):
+
+    with open(file_name, 'wb') as file:
+
+        writer = csv.writer(file, delimiter=delimiter)
+        if isinstance(data, zip):
+            writer.writerows(data)
+        else:
+            writer.writerow(data)
