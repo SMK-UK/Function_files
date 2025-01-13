@@ -49,40 +49,25 @@ def check_digits(
 
 def check_dir(
         directory:str,
-        verbose: bool=True
         ):
     """
-    Check if a directory exists and if not create it at the desired
-    location.
-    
+    Check if a directory exists already and if not, create it
+
     Parameters
     ----------
-    keys : list
-        Data values to create a dictionary from
 
-    Returns
-    -------
-    dictionary :
-        Key = value pairs for the data in keys
+    directory: str
+        directory path to check
+    
     """
     if os.path.exists(directory):
-        if verbose:
-            print(f'{directory} already exists \n')
+        pass
     else:
-        try:
-            os.makedirs(directory)
-            if verbose:
-                print(f'{directory} does not exist. \n \
-                        Creating directory... \n')
-        except FileExistsError:
-            if verbose:
-                print(f'{directory} already exists \n')
-            pass 
+        make_dir(directory) 
 
 def check_file_exists(
-        file_path:str, 
+        file_name:str, 
         format:str,
-        verbose:bool=True
         ):
     """
     Check if a file path exists already and create a copy to avoid 
@@ -95,18 +80,16 @@ def check_file_exists(
         file format that you wish to save the file with
     
     """
-    check = True
-    check_dir(file_path)
-    while check:
-        if os.path.isfile(f'{file_path}.{format}'):
-            save_file = f'{save_file}-(copy)'
-        else:
-            save_file = f'{save_file}.{format}'
-            if verbose:
-                print(f"Saving file as {save_file}")
-            check = False
+    dir, _  = os.path.split(file_name)
+    # check directory exists
+    check_dir(dir)
+    i = 0
+    save_name = f'{file_name}.{format}'
+    while os.path.isfile(save_name):
+        i += 1
+        save_name = f'{file_name} ({i}).{format}'
     
-    return save_file
+    return save_name
 
 def check_str(
     subset_string: str,
@@ -197,7 +180,6 @@ def dir_interrogate(
                                if not any(
                                 exc in folder for exc in exceptions
                                 )]
-
         # Process files
         if not dirs:
             temp_files = []
@@ -220,7 +202,6 @@ def dir_interrogate(
                                 )]
             if temp_files:
                 file_list.append(natsorted(temp_files))
-
     # Flatten the list if there is only one sublist
     if len(file_list) == 1:
         file_list = [
@@ -228,6 +209,48 @@ def dir_interrogate(
             ]
 
     return folder_list, file_list
+
+def extract_dirs(
+    path: str,
+    folder_1:str,
+    folder_2:str
+    ):
+    """
+    Extract the folders and subfolders in a directory using keywords 
+    found in the folder names.
+
+    Parameters
+    ----------
+    path : str
+        The path to the main directory to interrogate.
+    folder_1 : str
+        Keyword(s) in folders to extract from the first layer
+    folder_2 : str
+        Keyword(s) in folders to extract from the second layer
+
+    Returns
+    -------
+    Tuple[List[str], List[str]]
+        A tuple where:
+        - The first element is a list of folder names.
+        - The second element is a list of sub folder names.
+
+    """
+    folders = []
+    sub_folders = []
+    count = 0
+    for _, dirs, _ in natsorted(os.walk(path)):
+        for dir in dirs:
+            if folder_1 in dir:
+                folders.append(dir)
+                sub_folders.append([])
+            if folder_2 in dir:
+                sub_folders[count].append(dir)
+        
+        if any(folder_2 in x for x in dirs):
+            count += 1
+
+    return folders, sub_folders
 
 def find_numbers(
     string:str,
@@ -278,16 +301,13 @@ def make_dir(
     dictionary :
         Key = value pairs for the data in keys
     """
-    if check_dir(directory):
+    try:
+        os.makedirs(directory)
+        print(f'{directory} does not exist. \n \
+                Creating directory... \n')
+    except FileExistsError:
         print(f'{directory} already exists \n')
-    else:
-        try:
-            os.makedirs(directory)
-            print(f'{directory} does not exist. \n \
-                  Creating directory... \n')
-        except FileExistsError:
-            print(f'{directory} already exists \n')
-            pass    
+        pass    
 
 def make_index_dict(
     keys: list
@@ -482,6 +502,8 @@ def search_paths(
     exclude: List[str] = []
     ) -> List[str]:
     """
+    TODO handle empty folders 
+    
     Search a list of paths for include and exclude, joining
     files to folders if the conditions are met.
     
@@ -607,8 +629,10 @@ def write_json(
 
     Parameters
     ----------
+    path : str
+        Path to where the JSON file will be saved
     file_name : str
-        The path where the JSON file will be saved.
+        File name of the JSON.
     data : Any
         The data to be saved in the JSON file. Must be JSON-serializable.
     indent : int, optional
@@ -618,11 +642,12 @@ def write_json(
     -------
     None
         This function does not return any value.
+
     """
+    fname = check_file_exists(file_name, 'json')
     try:
-        file_name = check_file_exists(file_name, '.json')
-        with open(file_name, 'w') as f:
+        with open(fname, 'w') as f:
             json.dump(data, f, indent=indent)
     except Exception as e:
         print(f"Error: An unexpected error occurred while writing \
-            the file '{file_name}': {str(e)}")
+            the file '{fname}': {str(e)}")

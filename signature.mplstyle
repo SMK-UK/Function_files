@@ -4,11 +4,11 @@ text.color: .15
 figure.figsize : 6, 4
 figure.facecolor: white
 figure.dpi: 80
-figure.titlesize: 12
+figure.titlesize: 16
 figure.titleweight: bold
 
 ### LINES
-lines.linewidth: 0.8
+lines.linewidth:1.5
 lines.solid_capstyle: round
 lines.markersize: 5
 
@@ -16,10 +16,10 @@ lines.markersize: 5
 errorbar.capsize: 2.5
 
 ### PATCHES
-patch.facecolor: 0072B2
+patch.facecolor: whitesmoke
 
 ### LEGEND
-legend.fontsize: 10
+legend.fontsize: 14
 legend.frameon: False
 legend.numpoints: 1
 legend.scatterpoints: 1
@@ -33,16 +33,16 @@ ytick.direction: out
 ### FONTS
 font.family: sans-serif
 font.sans-serif: Arial, Liberation Sans, DejaVu Sans, Bitstream Vera Sans, sans-serif
-font.size: 10
+font.size: 14
 
 ### AXES
 axes.grid: True
 grid.linestyle: -
 axes.facecolor: whitesmoke
 axes.linewidth: 1.0
-axes.titlesize: 10
+axes.titlesize: 14
 axes.titleweight: bold
-axes.labelsize: 10
+axes.labelsize: 14
 axes.labelweight: bold
 axes.spines.top: True
 axes.spines.right: True

@@ -1,6 +1,5 @@
 '''
-Sean Keenan, PhD Physics
-Quantum Memories Group, Heriot-Watt University, Edinburgh
+Sean Keenan
 2024
 
 Class for plotting and saving data
@@ -38,7 +37,7 @@ combined_colors = np.vstack([scope_rgba, og_colors])
 # Create a new colormap from the combined colors
 custom_cmap = ListedColormap(combined_colors)
 
-class Spectra_Plotter:
+class Plotter:
 
     def __init__(self):
 
@@ -53,6 +52,7 @@ class Spectra_Plotter:
         self.precision = 2                                  # set precision for rounding
         self.title = 'plot title'                           # title for plots
         self.x_label = 'x axis'                             # x axis label
+        self.sec_x_label = None                             # second x axis label
         self.y_label = 'y axis'                             # y axis label
 
     def plot_scan(self, 
@@ -109,8 +109,7 @@ class Spectra_Plotter:
             ax.set(xlabel=f'{self.x_label}', ylabel=f'{self.y_label}')
 
             if self.save == True:
-                self.path = self.dir + self.folder + self.fname     # save directory
-                fig.savefig(fname=self.path, dpi=self.res, format=self.format, bbox_inches='tight')
+                self.save_fig(figure = fig)
                 
         return fig, ax
     
@@ -209,7 +208,7 @@ class Spectra_Plotter:
             # cut data to region of interest
             if lims:
                 
-                lower, upper = self.zoom(x_values, lims)
+                lower, upper = Plotter.zoom(x_values, lims)
             else:
                 lower = 0
                 upper = -1
@@ -232,23 +231,25 @@ class Spectra_Plotter:
                         alpha=1, label='_nolegend_')  
         # add secondary axis (wavelength / wavevector)
         if sec_axis:
-            ax.secondary_xaxis('top', 
+            sec = ax.secondary_xaxis('top', 
                                functions=(lambda x: 1E7/x, 
                                           lambda x: 1E7/x))
+            sec.set_xlabel(self.sec_x_label)
         # add vlines to indicate x values of interest
         if woi:
             for vline in woi:
-                ax.vline(x=vline)
+                ax.axvline(x=vline)
         # format the plot
-        ax.set(title=f'{self.title}')
+        #ax.set(title=f'{self.title}')
         ax.set(xlabel=f'{self.x_label}', ylabel=f'{self.y_label}')
-        ax.legend(bbox_to_anchor=(1.01, 1), loc='best', fontsize=8)     # legend outside of plot area
+        ax.legend()
+        ax.get_legend().remove()     # legend outside of plot area
         fig.tight_layout()
 
         if self.save == True:
             region = '_' + str(round(x_values[lower])) + '_' + str(round(x_values[upper]))
-            self.path = self.dir + self.folder + self.fname + region    # save directory
-            fig.savefig(fname=self.path, dpi=self.res, format=self.format, bbox_inches='tight')
+            self.fname = self.fname + region
+            self.save_fig(figure = fig)
 
         return fig, ax
     
@@ -294,8 +295,7 @@ class Spectra_Plotter:
             ax[index].legend()
         
         if self.save == True:
-            self.path = self.dir + self.folder + self.fname     # save directory
-            fig.savefig(fname=self.path, dpi=self.res, format=self.format, bbox_inches='tight')
+            self.save_fig(figure = fig)
 
         return fig, ax
     
@@ -349,8 +349,7 @@ class Spectra_Plotter:
             plot_key = 'off'                                    # swap to plot transmitted data
 
         if self.save == True:
-            self.path = self.dir + self.folder + self.fname     # save directory
-            fig.savefig(fname=self.path, dpi=self.res, format=self.format, bbox_inches='tight')
+            self.save_fig(figure = fig)
 
         return fig, ax
     
@@ -392,12 +391,19 @@ class Spectra_Plotter:
         ax.legend(loc='best')
     
         if self.save == True:
-            self.path = self.dir + self.folder + self.fname     # save directory
-            fig.savefig(fname=self.path, dpi=self.res, format=self.format, bbox_inches='tight')
+            self.save_fig(figure = fig)
 
         return fig, ax
+    
+    def save_fig(self, figure):
 
-    def zoom(self, data, bounds:tuple=()):
+        path = f'{self.dir}{self.folder}{self.fname}.{self.format}'     # save directory
+        figure.savefig(fname=path, dpi=self.res, format=self.format, bbox_inches='tight')
+
+        return print('figure saved!')
+    
+    @staticmethod
+    def zoom(data, bounds:tuple=()):
         """
         Zoom in on a particular area of interest in a dataset
 

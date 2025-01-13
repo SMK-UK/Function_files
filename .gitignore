@@ -1,5 +1,7 @@
 # folder specific files
 *.json
+file_saver.py
+addresses.py
 
 # Byte-compiled / optimized / DLL files
 __pycache__
