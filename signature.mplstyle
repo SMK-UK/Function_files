@@ -1,3 +1,20 @@
+### AXES
+axes.grid: True
+grid.linestyle: -
+axes.facecolor: whitesmoke
+axes.linewidth: 1.0
+axes.titlesize: 10
+axes.titleweight: bold
+axes.labelsize: 10
+axes.labelweight: bold
+axes.spines.top: True
+axes.spines.right: True
+axes.labelcolor: .15
+axes.axisbelow: True
+
+### ERRORBARS
+errorbar.capsize: 2.5
+
 ### FIGURE
 text.color: .15
 
@@ -7,22 +24,27 @@ figure.dpi: 80
 figure.titlesize: 16
 figure.titleweight: bold
 
-### LINES
-lines.linewidth:1.5
-lines.solid_capstyle: round
-lines.markersize: 5
+### FONTS
+font.family: sans-serif
+font.sans-serif: Arial, Liberation Sans, DejaVu Sans, Bitstream Vera Sans, sans-serif
+font.size: 10
 
-### ERRORBARS
-errorbar.capsize: 2.5
-
-### PATCHES
-patch.facecolor: whitesmoke
+### LATEX
+text.usetex: False
 
 ### LEGEND
 legend.fontsize: 14
 legend.frameon: False
 legend.numpoints: 1
 legend.scatterpoints: 1
+
+### LINES
+lines.linewidth: 0.8
+lines.solid_capstyle: round
+lines.markersize: 5
+
+### PATCHES
+patch.facecolor: 0072B2
 
 ### TICKS
 xtick.color: .15
@@ -33,16 +55,16 @@ ytick.direction: out
 ### FONTS
 font.family: sans-serif
 font.sans-serif: Arial, Liberation Sans, DejaVu Sans, Bitstream Vera Sans, sans-serif
-font.size: 14
+font.size: 10
 
 ### AXES
 axes.grid: True
 grid.linestyle: -
 axes.facecolor: whitesmoke
 axes.linewidth: 1.0
-axes.titlesize: 14
+axes.titlesize: 10
 axes.titleweight: bold
-axes.labelsize: 14
+axes.labelsize: 10
 axes.labelweight: bold
 axes.spines.top: True
 axes.spines.right: True

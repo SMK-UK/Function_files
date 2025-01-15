@@ -544,7 +544,7 @@ def peak_find(y, x=None, top_tol=None, dist=None, prom_tol=None, lims=None):
     ----------
 
     y : array to find peaks
-    x : corresponding
+    x : corresponding x-values
     args : peak finding conditions (see scipy.signal.find_peaks)
 
     Returns
@@ -552,13 +552,9 @@ def peak_find(y, x=None, top_tol=None, dist=None, prom_tol=None, lims=None):
 
     peaks_data : indexes of peaks for each data set
 
-    TODO
-
-    Fix params not working as expected - does not affect peak finding
-
     """
     lower = 0
-    upper = -1
+    upper = None
 
     if lims:
         lower, upper = zoom(x, bounds=lims)
