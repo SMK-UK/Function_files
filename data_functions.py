@@ -6,6 +6,9 @@ Quantum Memories Group, Heriot-Watt University, Edinburgh
 Functions designed to load in and parse data form .csv or .txt
 '''
 
+# TODO: 
+# update this to operate as class that can be inherited into other files for data handling needs.
+
 from natsort import natsorted
 import numpy as np
 import csv, json, os, re
@@ -346,7 +349,7 @@ import pandas as pd
 import numpy as np
 from typing import List
 
-def open_csv(path: str, separators: str = ",") -> np.ndarray:
+def open_csv(path: str, separators: str = ",", header=None) -> np.ndarray:
     """
     Open a CSV file and convert its contents to a NumPy array.
 
@@ -372,7 +375,7 @@ def open_csv(path: str, separators: str = ",") -> np.ndarray:
     """
     try:
         # Read the CSV file into a DataFrame
-        temp_df = pd.read_csv(path, sep=separators, engine='python')
+        temp_df = pd.read_csv(path, sep=separators, engine='python', header=header)
         # Convert the entire DataFrame to a NumPy array
         csv_data = temp_df.to_numpy()
         return csv_data

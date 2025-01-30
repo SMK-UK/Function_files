@@ -9,6 +9,7 @@ V.0.1
 TODO
     - add checking for duplicate saves to prevent overwrite
     - add remaining plot functions and update
+    - add formatting functionality so users can change from default easily
 
 '''
 
@@ -46,7 +47,6 @@ class Plotter:
 
     def __init__(self):
 
-        self.save = False                                   # choose to save plots to file
         self.dir = dirs.base                                # set directory
         self.folder = f'folder_name/'                       # folder name
         self.fname = f'file_name'                           # file name
@@ -55,7 +55,7 @@ class Plotter:
         self.scale_x = 1                                    # set scaling factor for x-axis
         self.scale_y = 1                                    # set scaling factor for y-axis
         self.precision = 2                                  # set precision for rounding
-        self.title = 'plot title'                           # title for plots
+        self.title = ''                                     # title for plots
         self.x_label = 'x axis'                             # x axis label
         self.sec_x_label = None                             # second x axis label
         self.y_label = 'y axis'                             # y axis label
@@ -73,6 +73,36 @@ class Plotter:
             self.y_label = f"Voltage {y_labels[self.scale_y]}"
         else:
             self.y_label = f"Voltage (a.u.)"
+
+    def plot_aom_eff(self, 
+                     data:np.array, 
+                     max:int=1
+                     ):
+        """
+        Plot the efficiency curve data for an AOM.
+
+        Parameters
+        ----------
+        data : array
+            array of data containing x values, single and 
+            double pass values
+        max : int or float
+            maximum power before the AOM
+
+        Returns
+        -------
+        fig, ax: 
+            Figure and axes handles for the plot
+        
+        """
+        fig, ax = mp.subplots()
+        ax.plot(data[:,0], data[:,1]/max, 'x', label='SP')
+        ax.plot(data[:,0], data[:,2]/max, 'x', label='DP')
+        ax.set(title=f'{self.title}')
+        ax.set(xlabel=f'{self.x_label}', ylabel=f'{self.y_label}')
+        ax.legend(loc='upper left')
+
+        return fig, ax
 
     def plot_scan(self, 
                   data_dict:dict, 
@@ -126,9 +156,6 @@ class Plotter:
             ax.errorbar(x, y_data, error_y, error_x, fmt='.b')
             ax.set(title=f'{self.title}')
             ax.set(xlabel=f'{self.x_label}', ylabel=f'{self.y_label}')
-
-            if self.save == True:
-                self.save_fig(fig)
                 
         return fig, ax
     
@@ -184,9 +211,6 @@ class Plotter:
                 ax.plot(time, data, color=custom_cmap(index), label=labels[index])
                 ax.legend()
             ax.set(xlabel=self.x_label, ylabel='Voltage (V)')
-        
-        if self.save == True:
-            self.save_fig(self)
         
         return fig, ax
     
@@ -274,15 +298,16 @@ class Plotter:
                                color=woi_set[2], linewidth='1', alpha=0.3)
         # format the plot
         #ax.set(title=f'{self.title}')
+        #ax.set(xlabel=f'{self.x_label}', ylabel=f'{self.y_label}')
+        #ax.legend(bbox_to_anchor=(1.01, 1), loc='best', fontsize=8)     # legend outside of plot area
+        #fig.tight_layout()
         ax.set(xlabel=f'{self.x_label}', ylabel=f'{self.y_label}')
         ax.legend()
-        ax.get_legend().remove()     # legend outside of plot area
+        ax.get_legend().remove()     
         fig.tight_layout()
 
-        if self.save == True:
-            region = '_' + str(round(x_values[lower])) + '_' + str(round(x_values[upper]))
-            self.fname = self.fname + region
-            self.save_fig(figure = fig)
+        region = '_' + str(round(x_values[lower])) + '_' + str(round(x_values[upper]))
+        self.fname = self.fname + region
 
         return fig, ax
     
@@ -326,9 +351,6 @@ class Plotter:
             ax[index].set_yscale(f'{scales[index]}')
             ax[index].set(xlabel=f'{self.x_label}', ylabel=f'{self.y_label}')
             ax[index].legend()
-        
-        if self.save == True:
-            self.save_fig(figure = fig)
 
         return fig, ax
     
@@ -381,12 +403,9 @@ class Plotter:
             ax[1][index].plot(time[i['trig']:i['ramp']], data[i['trig']:i['ramp']], label='raw', alpha=0.8)
             ax[1][index].plot(time[i['trig']+i[plot_key]:i['ramp']], data[i['trig']+i[plot_key]:i['ramp']], label='cut', alpha=0.8)
             ax[1][index].set(ylabel='log scale (a.u.)')
-            ax[1][index].set(yscale=('log'))
+            ax[1][index].set(yscale='log')
 
             plot_key = 'off'                                    # swap to plot transmitted data
-
-        if self.save == True:
-            self.save_fig(figure = fig)
 
         return fig, ax
     
@@ -428,19 +447,72 @@ class Plotter:
         ax.set_title('Stimulated Emission')
         ax.plot(time, channel_data, label='original data', alpha=0.8)
         ax.plot(time[i['trig']+i['off']:i['ramp']], channel_data[i['trig']+i['off']:i['ramp']], label='echo selected', alpha=0.8)
-        ax.set(xlabel=(self.x_label), ylabel='Voltage (V)')
+        ax.set(xlabel=self.x_label, ylabel='Voltage (V)')
         ax.legend(loc='best')
-    
-        if self.save == True:
-            self.save_fig(figure = fig)
 
+        return fig, ax
+
+    def plot_XRD(self, data:list, labels:list[str]=None):
+        '''
+        Plot XRD data for a given crystal
+
+        Parameters
+        ----------
+        data: array
+            x, y data 
+        labels: list[str]
+            list of labels for data
+
+        Returns
+        -------
+        fig, ax: 
+            Figure and axes handles for the plot
+
+        '''
+        assert len(data)%2 == 0, "Data must contain x,y multiples"
+        
+        fig, ax = mp.subplots()
+        for i in range(len(data)//2):       # plot multiple x, y combinations
+            ax.plot(data[i*2], data[i*2+1], label=labels[i])
+        ax.set(xlabel=self.x_label, ylabel=self.y_label)
+        ax.legend(loc='best')
+
+        return fig, ax
+    
+    def plot_XRD_stick(self, data:list, labels:list[str]=None):
+        '''
+        Plot XRD data for a given crystal as a stem plot
+
+        Parameters
+        ----------
+        data: array
+            x, y data - peak locations
+        labels: list[str]
+            list of labels for data
+
+        Returns
+        -------
+        fig, ax: 
+            Figure and axes handles for the plot
+
+        '''
+        n = len(data)
+        assert n%2 == 0, "Data must contain x,y multiples"
+        m = n//2
+        fig, ax = mp.subplots(nrows=m)
+        for i in range(m):       # plot multiple x, y combinations
+            st_vars = ax[i].stem(data[i*2], data[i*2+1], markerfmt='', label=labels[i], linefmt=f'C{i}')
+            st_vars[1].set_linewidth(2)
+            st_vars[2].set_visible(False)
+            ax[i].legend(loc='upper right')
+            
         return fig, ax
     
     def save_fig(self, figure):
 
         path = f'{self.dir}{self.folder}{self.fname}.{self.format}'     # save directory
         figure.savefig(fname=path, dpi=self.res, format=self.format, bbox_inches='tight')
-
+        
         return print('figure saved!')
     
     @staticmethod

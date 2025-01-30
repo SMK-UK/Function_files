@@ -609,29 +609,27 @@ def pseudo_voigt(x:list[float], y_0:float, amp_g:float, x_0g:float,
 
     return pv
 
-def rise_time(t, amp, t_0, t_r):
+def rising_edge(t, amp, t_0, t_r):
     """
-    Generates Lorentzian function with given parameters.
+    Generates a rising edge with the given parameters.
 
     Parameters
     ----------
 
-    x : array_like
-        Input range of frequencies
+    t : array_like
+        Input range of time
     amp : single value
-        Height of peak
-    y_0 : Single value
-        Y offset
-    x_0 : single value
-        Central frequency of Lorentzian
-    gamma : single value
-        FWHM of Lorentzian
+        Maximum value of rise
+    t_0 : Single value
+        time offset
+    t_r : single value
+        rise time
     
     Returns
     -------
 
     out : 1-D array
-        Output amplitudes as function of x
+        Output amplitudes as function of t 
 
     """
     return amp * (1 - np.exp(-(t-t_0)/t_r))
@@ -671,5 +669,3 @@ def print_T1_fit(fit_data):
     print("I0 : {0:2.2f} mV, T1 : {1:2.2f} us, Y0 : {2:2.2f} mV \n".format(fit_data[0][0]*1E3, fit_data[0][1]*1E6, fit_data[0][2]*1E3))
     print('Fit Error data:')
     print("dI0 : {0:2.2f} mV, dT1 : {1:2.3f} us, dY0 : {2:2.2f} mV \n".format(fit_data[1][0]*1E3,fit_data[1][1]*1E6, fit_data[1][2]*1E3))
-
-    
