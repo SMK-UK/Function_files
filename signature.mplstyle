@@ -10,7 +10,7 @@ figure.titleweight: bold       # Weight of the figure title font (e.g., normal, 
 font.family: sans-serif         # Default font family used in the figure
 font.sans-serif: Arial, Liberation Sans, DejaVu Sans, Bitstream Vera Sans, sans-serif
                                # List of sans-serif fonts to try, in priority order
-font.size: 10                  # Default font size for text elements
+font.size: 12                  # Default font size for text elements
 
 ### LATEX
 text.usetex: True              # Use LaTeX for rendering text (requires a LaTeX installation)
@@ -22,7 +22,7 @@ axes.facecolor: whitesmoke     # Background color of the axes
 axes.linewidth: 1.0            # Width of the axes frame lines
 axes.titlesize: 10             # Font size of the axes title
 axes.titleweight: bold         # Weight of the axes title font
-axes.labelsize: 14             # Font size of the x and y axis labels
+axes.labelsize: 16             # Font size of the x and y axis labels
 axes.labelweight: bold         # Weight of the x and y axis label font
 axes.spines.top: True          # Display the top spine (border) of the axes
 axes.spines.right: True        # Display the right spine (border) of the axes
@@ -39,7 +39,7 @@ legend.numpoints: 1            # Number of points in a legend entry for a line
 legend.scatterpoints: 1        # Number of points in a legend entry for a scatter plot
 
 ### LINES
-lines.linewidth: 1             # Default width of lines in plots
+lines.linewidth: 2             # Default width of lines in plots
 lines.solid_capstyle: round    # Cap style for solid lines (e.g., round, butt, projecting)
 lines.markersize: 5            # Default size of markers in plots
 
@@ -51,5 +51,5 @@ xtick.color: .15               # Color of x-axis ticks, specified as a grayscale
 ytick.color: .15               # Color of y-axis ticks, specified as a grayscale value
 xtick.direction: out           # Direction of x-axis ticks (e.g., in, out)
 ytick.direction: out           # Direction of y-axis ticks (e.g., in, out)
-xtick.labelsize: 12            # Font size of x-axis tick labels
-ytick.labelsize: 12            # Font size of y-axis tick labels
+xtick.labelsize: 14            # Font size of x-axis tick labels
+ytick.labelsize: 14            # Font size of y-axis tick labels
