@@ -1,7 +1,7 @@
 # folder specific files
 *.json
-file_saver.py
 addresses.py
+file_saver.py
 
 # Byte-compiled / optimized / DLL files
 *.pyc

@@ -8,4 +8,3 @@ class Init_Directories:
         
         self.base = "C:/Users/keena/"
         self.code = self.base + "Documents/University/python_scripts/"
-        self.dropbox = "C:/Users/sk88/Heriot-Watt University Team Dropbox/RES_EPS_Quantum_Photonics_Lab/Experiments/Current Experiments/"
