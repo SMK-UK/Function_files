@@ -653,6 +653,8 @@ def write_file(file_name:str, save_data, format:str='txt', **kwargs):
     
     Supoorted types are .txt, .json, .csv
     '''
+    # clean file name and remove extension
+    file_name = return_name(file_name)
     fname = f"{file_name}.{format}"
 
     i = kwargs.get('delimiter') if kwargs else ';'
@@ -688,3 +690,22 @@ def write_text(file_name, data, delimiter=','):
             writer.writerows(data)
         else:
             writer.writerow(data)
+
+def check_ext(
+        path:str
+        ) -> bool:
+    '''
+    Check if given path contains file extension
+    '''
+    return bool(os.path.splitext(path)[1])
+
+def return_name(
+        path:str
+        ) -> bool:
+    '''
+    Retrun path without file extension
+    '''
+    if check_ext(path):
+        return os.path.splitext(path)[0]
+    else:
+        return path

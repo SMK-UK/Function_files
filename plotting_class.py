@@ -28,8 +28,7 @@ dirs = Init_Directories()
 from Function_files.fitting_functions import exp_decay
 from Function_files.math_functions import zoom
 
-
-mp.style.use(dirs.functions + "signature.mplstyle")
+mp.style.use(dirs.mplstyle)
 
 # colour map for plotting scope data
 scope_colours = ['gold', 'limegreen', 'orange', 'royalblue']
@@ -48,8 +47,8 @@ class Plotter:
     def __init__(self):
 
         self.dir = dirs.base                                # set directory
-        self.folder = f'folder_name/'                       # folder name
-        self.fname = f'file_name'                           # file name
+        self.folder = 'folder_name/'                        # folder name
+        self.fname = 'file_name'                            # file name
         self.format = 'png'                                 # format of saved plots
         self.res = 80                                       # set resolution of plots
         self.scale_x = 1                                    # set scaling factor for x-axis
@@ -60,19 +59,24 @@ class Plotter:
         self.sec_x_label = None                             # second x axis label
         self.y_label = 'y axis'                             # y axis label
 
-    def make_label(self):
-        
-        x_labels = {1:'s', 1E3:'ms', 1E6:'$\\mu$s', 1E9:'ns', 1E12:'ps'}
-        y_labels = {1:'V', 1E3:'mV', 1E6:'$\\mu$V', 1E9:'nV'}
-        if self.scale_x in x_labels:
-            self.x_label = f"Time {x_labels[self.scale_x]}"
-        else:
-            self.x_label = f"Time (a.u.)"
+    def scale(self, axis='x'):
 
-        if self.scale_y in y_labels:
-            self.y_label = f"Voltage {y_labels[self.scale_y]}"
-        else:
-            self.y_label = f"Voltage (a.u.)"
+        prefix = {
+            1E-9: 'G',
+            1E-6: 'M',
+            1E-3: 'k',
+            1:'',
+            1E3:'m',
+            1E6:'$\\mu$',
+            1E9:'n',
+            1E12:'p'
+            }
+        
+        if axis == 'x':
+            return prefix[self.scale_x]
+
+        if axis == 'y':
+            return prefix[self.scale_y]
 
     def plot_aom_eff(self, 
                      data:np.array, 
@@ -140,23 +144,20 @@ class Plotter:
             Figure and axes handles for the plot
 
         '''
+        x = [round(float(key) * self.scale_x, self.precision) for key in data_dict]
+        y = [data_dict[key].get(y_key) * self.scale_y for key in data_dict]
+    
+        x_err = [data_dict[key].get(xerr_key, 0) * self.scale_x for key in data_dict] \
+                if xerr_key else [0] * len(data_dict)
+
+        y_err = [data_dict[key].get(yerr_key, 0) * self.scale_y for key in data_dict] \
+             if yerr_key else [0] * len(data_dict)
+        
         fig, ax = mp.subplots()
-        for key in data_dict:
-            x = round(float(key), self.precision) * self.scale_x
-            y_data = data_dict[key][y_key] * self.scale_y 
-            if xerr_key:
-                error_x = data_dict[key][xerr_key] * self.scale_y
-            else:
-                error_x = 0
-            if yerr_key:
-                error_y = data_dict[key][yerr_key] * self.scale_y
-            else:
-                error_y = 0
-            
-            ax.errorbar(x, y_data, error_y, error_x, fmt='.b')
-            ax.set(title=f'{self.title}')
-            ax.set(xlabel=f'{self.x_label}', ylabel=f'{self.y_label}')
-                
+        ax.errorbar(x, y, y_err, x_err, fmt='.', color='C0')
+        ax.set(title=f'{self.title}')
+        ax.set(xlabel=f'{self.x_label}', ylabel=f'{self.y_label}')
+
         return fig, ax
     
     def plot_scope(self, 
@@ -178,29 +179,26 @@ class Plotter:
             Choose to plot individual or on top of one another
 
         '''
-        # make label for plots
-        self.make_label()
         # plot single array
         if not isinstance(channel_data, list):
             channel_data = [channel_data]
+        # scale data
+        channel_data = [data * self.scale_y for data in channel_data] 
         # scale time
         time = time * self.scale_x
+
         # set labels if they exist or not
-        labels = []
-        if titles:
-            for title in titles:
-                labels.append(title)
-        if not titles or len(titles) < len(channel_data):
-            for index in range(len(titles), len(channel_data), 1):
-                labels.append(f'Channel {index+1}')
+        labels = titles[:]
+        labels.extend([f'Channel {i+1}' for i in range(len(labels), len(channel_data))])
+
         # chosose plot type
         if multi:
             num = len(channel_data)
-            fig, ax = mp.subplots(nrows=num, ncols=1, sharex='all')
+            fig, ax = mp.subplots(nrows=num, ncols=1, sharex=True)
             # shared labels
             fig.tight_layout(w_pad=2, rect=[0.05, 0.05, 1, 1])
-            fig.supxlabel(self.x_label)
-            fig.supylabel('Voltage (V)')
+            fig.supxlabel(f'Time {self.scale("x")}s')
+            fig.supylabel(f'Voltage ({self.scale("y")}V)')
 
             for index, axis in enumerate(ax):
                 axis.set_title(labels[index])
@@ -210,7 +208,8 @@ class Plotter:
             for index, data in enumerate(channel_data):
                 ax.plot(time, data, color=custom_cmap(index), label=labels[index])
                 ax.legend()
-            ax.set(xlabel=self.x_label, ylabel='Voltage (V)')
+            ax.set(xlabel=f'Time {self.scale("x")}s', 
+            ylabel=f'Voltage ({self.scale("y")}V)')
         
         return fig, ax
     
@@ -336,7 +335,6 @@ class Plotter:
             fit = fit_params
 
         # make label for plots
-        self.make_label()
         scale_time = time * self.scale_x
 
         labels = ['Reference Fit', 'Log Scale Fit']                    # plot labels
@@ -346,11 +344,13 @@ class Plotter:
         for index, label in enumerate(labels):
         
             ax[index].set(title=f'{label}')
-            ax[index].plot(scale_time, data - fit[-1], color='blue', alpha=0.5, label='Exp. Data')
-            ax[index].plot(scale_time, exp_decay((time), *fit) - fit[-1], color='orange', linestyle='--', alpha=1, label='Fit')
+            ax[index].plot(scale_time, (data - fit[-1]) * self.scale_y, color='C0', alpha=1, label='Exp. Data')
+            ax[index].plot(scale_time, (exp_decay((time), *fit) - fit[-1]) * self.scale_y, color='C1', linestyle='--', alpha=1, label='Fit')
             ax[index].set_yscale(f'{scales[index]}')
-            ax[index].set(xlabel=f'{self.x_label}', ylabel=f'{self.y_label}')
+            ax[index].set(ylabel=f'Voltage ({self.scale("y")}V)')
             ax[index].legend()
+
+        ax[0].set(xlabel=f'Time ({self.scale("x")}s)')
 
         return fig, ax
     
@@ -374,10 +374,9 @@ class Plotter:
             Figure and axes handles for the plot
 
         '''
-        # make label for plots
-        self.make_label()
         # scale time
         time = time * self.scale_x
+        channel_data = [data * self.scale_y for data in channel_data]
         label = ['Reference', 'Transmitted']                    # plot labels
         # default to plot all
         if not i:
@@ -389,7 +388,7 @@ class Plotter:
         fig, ax = mp.subplots(ncols=2, nrows=2, sharex=True)
         # tight layout and shared labels
         fig.tight_layout(w_pad=2, rect=[0, 0.05, 1, 1])
-        fig.supxlabel(self.x_label)
+        fig.supxlabel(f'Time ({self.scale("x")}s)')
 
         plot_key = 'ref_off'                                    # plot reference data first
         for index, data in enumerate(channel_data):
@@ -397,7 +396,7 @@ class Plotter:
             ax[0][index].set(title=f'{label[index]}')
             ax[0][index].plot(time[i['trig']:i['ramp']], data[i['trig']:i['ramp']], label='raw', alpha=0.8)
             ax[0][index].plot(time[i['trig']+i[plot_key]:i['ramp']], data[i['trig']+i[plot_key]:i['ramp']], label='cut', alpha=0.8)
-            ax[0][index].set(ylabel='Voltage (V)')
+            ax[0][index].set(ylabel=f'Voltage ({self.scale("y")}V)')
             # plot logarithmic data
             ax[1][index].set(title=f'{label[index]}')
             ax[1][index].plot(time[i['trig']:i['ramp']], data[i['trig']:i['ramp']], label='raw', alpha=0.8)
@@ -429,8 +428,6 @@ class Plotter:
             Figure and axes handles for the plot
 
         '''
-        # make label for plots
-        self.make_label()
         # scale time
         time = time * self.scale_x
         # default to plot all
@@ -447,7 +444,7 @@ class Plotter:
         ax.set_title('Stimulated Emission')
         ax.plot(time, channel_data, label='original data', alpha=0.8)
         ax.plot(time[i['trig']+i['off']:i['ramp']], channel_data[i['trig']+i['off']:i['ramp']], label='echo selected', alpha=0.8)
-        ax.set(xlabel=self.x_label, ylabel='Voltage (V)')
+        ax.set(xlabel=f'Time ({self.scale("x")}s)', ylabel=f'Voltage ({self.scale("y")}V)')
         ax.legend(loc='best')
 
         return fig, ax
