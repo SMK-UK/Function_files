@@ -96,14 +96,14 @@ class Plotter:
         Returns
         -------
         fig, ax: 
-            Figure and axes handles for the plot
+            Figure and axes handles for the plot 
         
         """
         fig, ax = mp.subplots()
-        ax.plot(data[:,0], data[:,1]/max, 'x', label='SP')
-        ax.plot(data[:,0], data[:,2]/max, 'x', label='DP')
+        ax.plot(data[:,0] * self.scale_x, (data[:,1]/max) *100, 'x', label='SP')
+        ax.plot(data[:,0] * self.scale_x, (data[:,2]/max) *100, 'x', label='DP')
         ax.set(title=f'{self.title}')
-        ax.set(xlabel=f'{self.x_label}', ylabel=f'{self.y_label}')
+        ax.set(xlabel=f'{self.x_label}', ylabel='Efficiency (\\%)')
         ax.legend(loc='upper left')
 
         return fig, ax
@@ -507,7 +507,7 @@ class Plotter:
     
     def save_fig(self, figure):
 
-        path = f'{self.dir}{self.folder}{self.fname}.{self.format}'     # save directory
+        path = dirs.join(self.dir, self.folder, self.fname) + f'.{self.format}'
         figure.savefig(fname=path, dpi=self.res, format=self.format, bbox_inches='tight')
         
         return print('figure saved!')

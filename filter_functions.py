@@ -2,9 +2,10 @@
 Generic smoothing and filtering functions 
 '''
 
-from scipy.signal import fftconvolve
 from Function_files.fitting_functions import gaussian
 import numpy as np
+from scipy.fftpack import fft, fftfreq
+from scipy.signal import fftconvolve
 
 def band_pass(N, low, high):
     """
@@ -26,7 +27,6 @@ def band_pass(N, low, high):
         Normalised band-pass function of length N
 
     """
-
     bpf = fftconvolve(low_pass(N, low), high_pass(N, high))
     bpf = bpf / np.sum(bpf)
 
@@ -47,9 +47,7 @@ def blackman(N: int):
         Normalised Blackman window of length N
 
     """
-    if not N % 2:
-        N += 1
-
+    N = _even(N)
     n = np.arange(N)
 
     return 0.42 - 0.5 * np.cos(2*np.pi * n / (N-1)) + 0.08 * np.cos(4 * np.pi * n / (N-1))
@@ -73,9 +71,7 @@ def high_pass(N, fc):
 
     """
     # N must be even
-    if not N % 2:
-        N += 1
-
+    N = _even(N)
     high_pass =  blackman(N) * sinc_filter(N, fc)
     high_pass = high_pass / np.sum(high_pass)
     high_pass = -high_pass
@@ -101,9 +97,7 @@ def low_pass(N, fc):
         Normalised low-pass windowed sinc filter of length N
 
     """
-    if not N % 2:
-        N += 1
-
+    N = _even(N)
     low_pass = blackman(N) * sinc_filter(N, fc)
 
     return low_pass / np.sum(low_pass)
@@ -151,9 +145,7 @@ def sinc_filter(N, fc):
         Normalised sinc filter of length N
 
     """
-    if not N % 2:
-        N += 1
-
+    N = _even(N)
     n = np.arange(N)
 
     return np.sinc(2 * fc * (n - (N-1)/2))
@@ -179,8 +171,7 @@ def smooth_data(data, N: int=100, mode:str='square'):
 
     """
     # add 1 to N if even
-    if N % 2 == 0:
-        N += 1
+    N = _even(N)
     # create a boxcar window and then create a list of smoothed data
     avg_window = create_window(N, mode)
     # pad data to avoid edge effects
@@ -189,3 +180,47 @@ def smooth_data(data, N: int=100, mode:str='square'):
     padded = np.concatenate((data[N_pad:], data, data[:N_pad]))
 
     return fftconvolve(avg_window, padded)[N_pad+N//2:-N_pad-N//2]
+
+def make_fft(x, y):
+    """
+    Calculate the FFT of a given signal and return the transform
+
+    Parameters
+    ----------
+    x : array
+        Input array of data to be smoothed    
+    y : int
+        Length of filter
+    mode : string
+        Smoothing function to use > square, gaussian, blackman
+    
+    Returns
+    -------
+    X : array
+        Transformed x data (time /frequency)
+    Y : array
+        Transformed intensity data
+
+    """
+    N = np.size(x)
+    T = x[1] - x[0]
+
+    Y = fft(y)
+    X = fftfreq(N,T)
+
+    return X, Y
+
+def _even(N):
+    if N % 2 == 0:
+        N += 1
+    
+    return N
+
+def points(band):
+    return int(np.ceil(4/band))
+
+def ratio(sr, fc):
+    return fc/sr
+
+def sample_rate(time):
+    return 1/(time[1]-time[0])
