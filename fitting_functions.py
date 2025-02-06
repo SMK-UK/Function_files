@@ -7,6 +7,8 @@ import numpy as np
 from scipy.optimize import curve_fit
 from scipy.signal import find_peaks, fftconvolve
 
+#TODO convert to class
+
 def dbl_exp_decay(x, y_1, y_2, T1, T2, offset):
     """
     Generates approximate T1 decay with given parameters

@@ -4,8 +4,10 @@ Generic smoothing and filtering functions
 
 from Function_files.fitting_functions import gaussian
 import numpy as np
-from scipy.fftpack import fft, fftfreq
+from scipy.fft import fft, fftfreq
 from scipy.signal import fftconvolve
+
+#TODO Convert to class
 
 def band_pass(N, low, high):
     """
