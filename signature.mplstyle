@@ -20,7 +20,7 @@ axes.grid: True                # Display grid on the axes
 grid.linestyle: -              # Style of the grid lines (e.g., solid line `-`)
 axes.facecolor: whitesmoke     # Background color of the axes
 axes.linewidth: 1.0            # Width of the axes frame lines
-axes.titlesize: 10             # Font size of the axes title
+axes.titlesize: 14             # Font size of the axes title
 axes.titleweight: bold         # Weight of the axes title font
 axes.labelsize: 16             # Font size of the x and y axis labels
 axes.labelweight: bold         # Weight of the x and y axis label font

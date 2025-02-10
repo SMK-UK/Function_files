@@ -376,7 +376,7 @@ def fit_rise_time(x, y, params=None, meth=None, lims=(-np.inf, np.inf)):
         Uncertainty in fitted variables
         
     """
-    fit, success = curve_fit(rise_time, x, y, p0=params, method=meth, bounds=lims)
+    fit, success = curve_fit(rising_edge, x, y, p0=params, method=meth, bounds=lims)
     fit_err = np.sqrt(np.diag(success))
 
     return fit, fit_err

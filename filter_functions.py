@@ -206,7 +206,7 @@ def make_fft(x, y):
     T = x[1] - x[0]
 
     Y = fft(y)
-    X = fftfreq(N,T)
+    X = fftfreq(N, T)
 
     return X, Y
 

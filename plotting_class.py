@@ -17,6 +17,7 @@ from numpy import argmin, linspace, min
 from matplotlib.colors import ListedColormap, LinearSegmentedColormap, to_rgba
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as mp
+from mpl_toolkits.axes_grid1 import Divider, Size
 import numpy as np
 import os
 
@@ -25,7 +26,7 @@ from typing import Any, Dict, List, Tuple, Union
 from Function_files.addresses import Init_Directories
 dirs = Init_Directories()
 
-from Function_files.fitting_functions import exp_decay
+from Function_files.fitting_functions import exp_decay, rising_edge
 from Function_files.math_functions import zoom
 
 mp.style.use(dirs.mplstyle)
@@ -97,13 +98,77 @@ class Plotter:
         -------
         fig, ax: 
             Figure and axes handles for the plot 
-        
         """
         fig, ax = mp.subplots()
         ax.plot(data[:,0] * self.scale_x, (data[:,1]/max) *100, 'x', label='SP')
         ax.plot(data[:,0] * self.scale_x, (data[:,2]/max) *100, 'x', label='DP')
         ax.set(title=f'{self.title}')
         ax.set(xlabel=f'{self.x_label}', ylabel='Efficiency (\\%)')
+        ax.legend(loc='upper left')
+
+        return fig, ax
+    
+    def plot_err_sig(self, 
+                     data:np.array
+                     ):
+        """
+        Plot the efficiency curve data for an AOM.
+
+        Parameters
+        ----------
+        data : array
+            array of data containing x values, single and 
+            double pass values
+
+        Returns
+        -------
+        fig, ax: 
+            Figure and axes handles for the plot 
+        """
+        fig, ax = mp.subplots()
+        ax.plot(data[:,0] * self.scale_x, data[:,1], label='Transmitted')
+        ax.plot(data[:,0] * self.scale_x, data[:,2], label='Error Signal')
+        ax.set(title=f'{self.title}')
+        ax.set(xlabel=f'Piezo Voltage {self.scale('x')}', ylabel=f'Voltage {self.scale('y')}')
+        ax.legend(loc='upper left')
+
+        return fig, ax
+    
+    def plot_laser_char(self, 
+                     data:np.array,
+                     fit_data:np.array,
+                     dBm=False
+                     ):
+        """
+        Plot the power curve for a laser.
+
+        Parameters
+        ----------
+        data : array
+            array of data containing x values, single and 
+            double pass values
+        fit_data : array
+            fit params for data
+        dBm : bool
+            convert power to dBm
+
+        Returns
+        -------
+        fig, ax: 
+            Figure and axes handles for the plot 
+        
+        """
+        x = data[:,0]
+        x_int = np.linspace(x[0], x[-1])
+        y = data[:,1]
+        if dBm:
+            y = 10*np.log10(1000*y) 
+        
+        fig, ax = _fixed_fig()
+        ax.plot(data[:,0] * self.scale_x, y, 'x')
+        ax.plot(x_int, rising_edge(x_int, *fit_data), '--')
+        ax.set(title=f'{self.title}')
+        ax.set(xlabel=f'Drive Current ({self.scale('x')}A)', ylabel='Power (dBm)')
         ax.legend(loc='upper left')
 
         return fig, ax
@@ -468,7 +533,7 @@ class Plotter:
         '''
         assert len(data)%2 == 0, "Data must contain x,y multiples"
         
-        fig, ax = mp.subplots()
+        fig, ax = self._custom_fig()
         for i in range(len(data)//2):       # plot multiple x, y combinations
             ax.plot(data[i*2], data[i*2+1], label=labels[i])
         ax.set(xlabel=self.x_label, ylabel=self.y_label)
@@ -528,9 +593,48 @@ class Plotter:
         -------
         lims: tuple
             minimum index and maximum index for the zoomed data
-
         """
         lims = [argmin(abs(data - bounds[0])), 
                 argmin(abs(data - bounds[1]))]
 
         return lims
+    
+@staticmethod
+def _fixed_fig():
+    """
+    Create a custom Matplotlib figure with a flexible layout.
+
+    This method initializes a figure and an axis using a divider-based layout,
+    ensuring consistent spacing and alignment based on the current Matplotlib 
+    figure size settings.
+
+    Returns
+    -------
+    fig : matplotlib.figure.Figure
+        The created figure object.
+    ax : matplotlib.axes.Axes
+        The main axis object for plotting.
+    """
+    fig = mp.figure()
+    label_space = _fsize_to_inch(mp.rcParams['axes.labelsize'])
+    xtick_space = _fsize_to_inch(mp.rcParams['xtick.labelsize'])
+    ytick_space = _fsize_to_inch(mp.rcParams['ytick.labelsize'])
+    
+    width = mp.rcParams['figure.figsize'][0]
+    height = mp.rcParams['figure.figsize'][1]
+
+    h = [Size.Fixed(1.0), Size.Fixed(width-ytick_space-label_space)]
+    v = [Size.Fixed(1.0), Size.Fixed(height-xtick_space-label_space)]
+
+    divider = Divider(fig, (0,0,1,1), h, v, aspect=False)
+
+    ax = fig.add_axes(divider.get_position(), 
+            axes_locator=divider.new_locator(nx=1, ny=1))
+    # Prevent any automatic resizing
+    fig.subplots_adjust(left=(label_space + ytick_space) / width, right=1 - (label_space + ytick_space) / width,
+                    bottom=(label_space + xtick_space) / height, top=1 - (label_space + xtick_space) / height)
+    return fig, ax
+    
+@staticmethod
+def _fsize_to_inch(fontsize, tol=0.25):
+    return (fontsize / 72) + tol
